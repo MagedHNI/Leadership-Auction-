@@ -338,8 +338,14 @@ details.how .inner{padding:0 1em 1em;display:grid;gap:.8em}
 .tab .lot .body{padding:1.1em 1.15em 1.2em}
 .bidarea{display:grid;gap:.6em}
 .bidmain{min-height:76px;font-size:1.3em;border-radius:var(--rad);flex-direction:column;gap:.15em}
-.jumps{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
-.jumps .btn{min-height:52px}
+.custombid{display:grid;grid-template-columns:minmax(0,1fr);gap:.4em;margin-top:.3em;min-width:0}
+.bidarea{grid-template-columns:minmax(0,1fr);min-width:0}
+.tmain{grid-template-columns:minmax(0,1fr)}
+.cb-row{display:flex;gap:.5em;align-items:stretch}
+.custombid input{flex:1 1 0;width:100%;min-width:0;font:inherit;font-size:1.15em;font-weight:700;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--rad-sm);padding:.5em .7em;min-height:52px}
+.custombid input:disabled{background:var(--sunk);color:var(--ink-3)}
+.custombid .btn{min-height:52px;white-space:nowrap}
+.cb-offer{display:grid;gap:.5em;text-align:left}
 .why-not{font-size:.92em;color:var(--ink-2);text-align:center}
 .feedback{border-radius:var(--rad-sm);padding:.6em .9em;font-weight:700;font-size:.95em;text-align:center}
 .feedback.ok{background:var(--ok-soft);color:var(--ok)}
@@ -433,9 +439,9 @@ const CARDS = [
    2 = a strong secondary effect, 1 = a clear secondary effect, 0 = no direct effect.
    For S the rating is how much the behaviour LOWERS self-orientation.
    Card trust points = C + R + I + S.
-   Team trust score  = (sum C + sum R + sum I) / S_team,
-   where S_team = max(S_FLOOR, S_START - sum S). */
-const S_START = 10, S_FLOOR = 1;
+   Team trust score  = (min(CAP,sum C) + min(CAP,sum R) + min(CAP,sum I)) / S_team,
+   where S_team = max(S_FLOOR, S_START - S_STEP * sum S). */
+const S_START = 10, S_FLOOR = 1, S_STEP = 0.75, CAP = 10;
 const WEIGHTS = {
   c1:[3,0,0,1,"Knowing the business is the core of credibility. Looking past our own rulebook also lowers self-orientation."],
   c2:[3,1,0,0,"Evidence is what makes expert advice believable. It also makes advice repeatable: the same facts give the same answer."],
@@ -463,11 +469,14 @@ const CARD = Object.fromEntries(CARDS.map(c => [c.id,c]));
 function trustOf(ids){
   const t = {c:0,r:0,i:0,s:0};
   ids.forEach(id => { const c = CARD[id]; if (c) { t.c+=c.w.c; t.r+=c.w.r; t.i+=c.w.i; t.s+=c.w.s; } });
-  const N = t.c + t.r + t.i;
-  const S = Math.max(S_FLOOR, S_START - t.s);
-  return {c:t.c, r:t.r, i:t.i, sred:t.s, N, S, T: N / S, floored: S_START - t.s < S_FLOOR};
+  const c = Math.min(CAP, t.c), r = Math.min(CAP, t.r), i = Math.min(CAP, t.i);   // each element counts up to CAP
+  const N = c + r + i;
+  const rawS = S_START - S_STEP * t.s;
+  const S = Math.max(S_FLOOR, rawS);
+  return {c, r, i, rawC:t.c, rawR:t.r, rawI:t.i, sred:t.s, N, S, T: N / S, floored: rawS < S_FLOOR, capped: t.c>CAP || t.r>CAP || t.i>CAP};
 }
 const fmtT = x => (Math.round(x*100)/100).toFixed(2);
+const fmtS = x => String(Math.round(x*100)/100);   // S shown with up to 2 decimals (5.5, 9.25)
 // Lots alternate colours so every element comes up early
 const ORDER = [];
 for (let n=1;n<=5;n++) for (const e of ["c","r","i","s"]) ORDER.push(e+n);
@@ -686,7 +695,7 @@ function colourCount(t){ const o={c:0,r:0,i:0,s:0}; owned(t).forEach(c => o[c.el
 function hasSet(t){ const o = colourCount(t); return o.c>0 && o.r>0 && o.i>0 && o.s>0; }
 function teamTrust(t){ return trustOf(owned(t).map(c => c.id)); }
 function trustIfWon(t, id){ return trustOf(owned(t).map(c => c.id).concat([id])); }
-function roomTrust(){ const xs = TEAM_IDS.map(t => teamTrust(t).T); return xs.reduce((a,b) => a+b, 0) / xs.length; }
+function roomTrust(){ const xs = TEAM_IDS.map(t => teamTrust(t).T).sort((a,b) => a-b); const m = Math.floor(xs.length/2); return xs.length % 2 ? xs[m] : (xs[m-1] + xs[m]) / 2; }
 function started(){ return (S().roundNo||0) > 0; }
 function nextRoundNo(){ return (S().roundNo||0) + 1; }
 function nextLotId(){
@@ -748,14 +757,17 @@ function undoSale(){
     st.cardId = ls.cardId; st.lastSale=null; st.phase="bidding"; st.call=0; st.callHigh=0; st.phaseAt=now();
   });
 }
-function placeBid(team, jump){
-  // unchanged rule: raise the current price by `jump`, never past the team's coins, never against yourself
-  const st = S(); if (st.phase!=="bidding") return Promise.resolve({ok:false, reason:"closed"});
-  const L = leader(); const step = st.settings.step||50;
-  if (L && L.team===team) return Promise.resolve({ok:false, reason:"leading"});
-  const amount = L ? L.amount + jump : (st.settings.opening||50) + (jump-step);
-  if (amount > left(team)) return Promise.resolve({ok:false, reason:"funds", amount});
-  return write("bids/"+team, {round:st.round, amount, at:stamp(), joined:true}).then(ok => ({ok, amount, reason: ok ? "" : "sync"}));
+function minBid(){ const st = S(); const L = leader(); return L ? L.amount + (st.settings.step||50) : (st.settings.opening||50); }
+function placeBid(team, amount){
+  // rule: bidding open, not against yourself, at least the minimum, in whole steps above it, never past the team's coins
+  const st = S(); if (st.phase!=="bidding") return Promise.resolve({ok:false, reason:"closed", amount});
+  const L = leader(); const step = st.settings.step||50; const min = minBid();
+  amount = Math.round(Number(amount));
+  if (L && L.team===team) return Promise.resolve({ok:false, reason:"leading", amount, min});
+  if (!(amount >= min)) return Promise.resolve({ok:false, reason:"low", amount, min});
+  if ((amount - min) % step !== 0) return Promise.resolve({ok:false, reason:"step", amount, min});
+  if (amount > left(team)) return Promise.resolve({ok:false, reason:"funds", amount, min});
+  return write("bids/"+team, {round:st.round, amount, at:stamp(), joined:true}).then(ok => ({ok, amount, min, reason: ok ? "" : "sync"}));
 }
 function resetGame(){
   // one atomic write: either everything resets or nothing does
@@ -783,7 +795,8 @@ const ui = {
   vote: {sel:[], done:false, sending:false, error:""},
   bid: null,          // {status:"sending"|"accepted"|"beaten"|"failed", amount, round, msg, at}
   toasts: [],
-  lastHigh:0
+  lastHigh:0,
+  customBid:"", customMsg:"", customOffer:null, customRound:null   // typed bid on the tablet (kept across live re-renders)
 };
 function plan(team){ try { return JSON.parse(lsGet("la-plan-"+GAME+"-"+team)||"{}") || {}; } catch(e){ return {}; } }
 function savePlan(team,p){ lsSet("la-plan-"+GAME+"-"+team, JSON.stringify(p)); }
@@ -841,11 +854,16 @@ function render(){
   if (lastVoteRound!==null && st0.voteRound!==lastVoteRound) ui.vote = {sel:[], done:false, sending:false, error:""};
   lastVoteRound = st0.voteRound;
   if (ui.bid && ui.bid.round!==st0.round) ui.bid = null;
+  if (ui.customRound!==st0.round) { ui.customRound = st0.round; ui.customBid = ""; ui.customMsg = ""; ui.customOffer = null; }
   // A new round or stage always reaches every screen, even mid-typing.
   const viewKey = (ui.role||"-") + "|" + st0.phase + "|" + (st0.roundNo||0);
   const stageChanged = viewKey !== lastViewKey;
-  if (typing() && !stageChanged) { renderDeferred = true; return; }
+  const act = document.activeElement;
+  const customFocus = !!(act && act.id==="custom-bid" && st0.phase==="bidding" && ui.role && ui.role!=="host");
+  if (typing() && !stageChanged && !customFocus) { renderDeferred = true; return; }
   if (stageChanged && typing()) document.activeElement.blur();
+  let keepCaret = null;
+  if (customFocus && !stageChanged) keepCaret = [act.selectionStart, act.selectionEnd];   // ui.customBid is kept in sync by the input listener
   const L = leader();
   if (ui.role==="host" && st0.phase==="bidding" && L && L.amount>ui.lastHigh) sound("bid");
   ui.lastHigh = (st0.phase==="bidding" && L) ? L.amount : 0;
@@ -859,6 +877,8 @@ function render(){
   const hadModal = !!document.querySelector(".overlay");
   $app.innerHTML = html;
   if (ui.modal && !hadModal) { const f = document.querySelector(".modal [data-autofocus]"); if (f) f.focus(); }
+  if (keepCaret) { const el = document.getElementById("custom-bid");
+    if (el && !el.disabled && !ui.modal) { el.value = ui.customBid; el.focus(); try { el.setSelectionRange(keepCaret[0], keepCaret[1]); } catch(e){} } }
   if (stageChanged && lastViewKey && ui.role) { try { window.scrollTo(0,0); } catch(e){} }
   lastViewKey = viewKey;
   tick();
@@ -899,26 +919,26 @@ function methodHtml(compact){
   return `<ol class="method">
     <li>Each card is rated 0–3 on the four elements: <b>3</b> = the element it mainly builds (every card has exactly one), <b>2</b> = a strong secondary effect, <b>1</b> = a clear secondary effect, <b>0</b> = no direct effect. For self-orientation the rating is how much the behaviour <b>lowers</b> it.</li>
     <li><b>Card trust points</b> = C + R + I + S−. Cards range from 3 to 5 points.</li>
-    <li><b>Team trust score</b> = (C + R + I) ÷ S. Every team starts with S = ${S_START}; each S− point lowers it by 1, down to a floor of ${S_FLOOR}. No cards = 0.</li>
-    ${compact ? "" : `<li>Because S is the divisor, a purple card adds little on its own but raises the value of every other card you own. Buying only purple cards stops paying off once S reaches ${S_FLOOR}, because you still need something on top of the line.</li>
-    <li><b>Room trust score</b> = the average of the five team scores.</li>`}
+    <li><b>Team trust score</b> = (C + R + I) ÷ S. Each of C, R and I counts up to a cap of ${CAP}. Every team starts with S = ${S_START}; each S− point lowers it by ${S_STEP}, down to a floor of ${S_FLOOR}. No cards = 0.</li>
+    ${compact ? "" : `<li>Because S is the divisor, a purple card adds little on its own but raises the value of every other card you own. Buying only purple cards stops paying off, because you still need something on top of the line. The cap of ${CAP} per element means piling up one element eventually adds nothing.</li>
+    <li><b>Room trust score</b> = the median of the five team scores.</li>`}
   </ol>
-  <div class="formula">Trust = (C + R + I) ÷ S &nbsp;·&nbsp; S = max(${S_FLOOR}, ${S_START} − S−)</div>
+  <div class="formula">Trust = (min(${CAP}, C) + min(${CAP}, R) + min(${CAP}, I)) ÷ S &nbsp;·&nbsp; S = max(${S_FLOOR}, ${S_START} − ${S_STEP} × S−)</div>
   <div class="caveat">These ratings are HNI's facilitation design for this game, based on our reading of the four trust elements in Maister, Green &amp; Galford (2000). They are not a validated measure of trust. Use them to start the conversation, and challenge any rating you disagree with in the debrief.</div>`;
 }
 function scoringDrawer(){
   return `<section class="drawer" aria-label="Scoring guide"><div class="row"><h2>Scoring guide</h2><span class="spacer"></span><button class="btn" data-act="cancel">Close</button></div>
     <div class="split"><div class="stack">${methodHtml(false)}</div>
       <div class="stack"><p class="eyebrow">Worked example</p>
-        ${(() => { const ex = trustOf(["c1","r1","i1","s2"]); return `<p>A team owning Lots ${["c1","r1","i1","s2"].map(lotNo).join(", ")} has C ${ex.c} + R ${ex.r} + I ${ex.i} = ${ex.N} on top. S− totals ${ex.sred}, so S = ${S_START} − ${ex.sred} = ${ex.S}. Trust = ${ex.N} ÷ ${ex.S} = <b>${fmtT(ex.T)}</b>.</p>`; })()}
-        ${(() => { const ex = trustOf(["c1","c2","r1","r3"]); return `<p>Swap the orange and purple cards for two more blue and green ones: ${ex.N} ÷ ${ex.S} = <b>${fmtT(ex.T)}</b>. Same total card points, lower trust, because S stays high.</p>`; })()}
+        ${(() => { const ex = trustOf(["c1","r1","i1","s2"]); return `<p>A team owning Lots ${["c1","r1","i1","s2"].map(lotNo).join(", ")} has C ${ex.c} + R ${ex.r} + I ${ex.i} = ${ex.N} on top. S− totals ${ex.sred}, so S = ${S_START} − ${S_STEP} × ${ex.sred} = ${fmtS(ex.S)}. Trust = ${ex.N} ÷ ${fmtS(ex.S)} = <b>${fmtT(ex.T)}</b>.</p>`; })()}
+        ${(() => { const ex = trustOf(["c1","c2","r1","r3"]); return `<p>Swap the orange and purple cards for two more blue and green ones: ${ex.N} ÷ ${fmtS(ex.S)} = <b>${fmtT(ex.T)}</b>. ${ex.T < trustOf(["c1","r1","i1","s2"]).T ? "Same total card points, lower trust, because S stays high." : "Same total card points; here the extra points outweigh the higher S."}</p>`; })()}
       </div></div>
     <div class="tablewrap"><table class="scores"><thead><tr><th>Lot</th><th>Behaviour</th><th>C</th><th>R</th><th>I</th><th>S−</th><th>Pts</th><th>Why this rating</th></tr></thead><tbody>
       ${ORDER.map(id => { const c = CARD[id]; return `<tr class="el-${c.el}"><td class="num">${lotNo(id)}</td><td>${esc(c.text)}</td>${["c","r","i","s"].map(e => `<td class="n ${c.w[e]?"":"z"}">${c.w[e]}</td>`).join("")}<td class="n">${c.pts}</td><td class="why">${esc(c.why)}</td></tr>`; }).join("")}
     </tbody></table></div>
   </section>`;
 }
-function trustBreakdown(tt){ return `(${tt.c} + ${tt.r} + ${tt.i}) ÷ ${tt.S}`; }
+function trustBreakdown(tt){ return `(${tt.c} + ${tt.r} + ${tt.i}) ÷ ${fmtS(tt.S)}`; }   // C, R, I already capped
 function equationHtml(){
   return `<div class="equation" aria-label="Trust equals credibility plus reliability plus intimacy, divided by self-orientation">
     <span>Trust =</span>
@@ -928,10 +948,10 @@ function equationHtml(){
 function elementTiles(){
   return `<div class="elements">${["c","r","i","s"].map(k => `<div class="eltile el-${k}"><b>${EL[k].name}</b><span>${EL[k].gloss}</span></div>`).join("")}</div>`;
 }
-function lotCard(id, extra){
+function lotCard(id, extra, hidePts){
   const c = CARD[id]; if (!c) return "";
   return `<article class="lot el-${c.el}" aria-label="Lot ${lotNo(id)}"><div class="band"></div>
-    <div class="body"><div class="meta"><span class="tag">${EL[c.el].name}</span><span class="lotno">Lot ${lotNo(id)} of 20 · ${c.pts} trust pts</span></div>
+    <div class="body"><div class="meta"><span class="tag">${EL[c.el].name}</span><span class="lotno">Lot ${lotNo(id)} of 20${hidePts ? "" : ` · ${c.pts} trust pts`}</span></div>
       <p class="text">${esc(c.text)}</p><p class="gloss">${EL[c.el].gloss}</p>${extra||""}</div></article>`;
 }
 function catalogue(clickable){
@@ -1079,7 +1099,7 @@ function houseRules(){
   const s = S().settings;
   return `<div class="rules">
     <div class="rule"><span class="k num">${fmt(s.budget)}</span><b>Coins per team</b><span>Spend them on the principles your team believes in. Coins don't carry over.</span></div>
-    <div class="rule"><span class="k num">+${fmt(s.step)}</span><b>Each bid raises the price by ${fmt(s.step)}</b><span>Bidding opens at ${fmt(s.opening)}. Tap Bid on your tablet; the highest bid when the gavel falls wins.</span></div>
+    <div class="rule"><span class="k num">+${fmt(s.step)}</span><b>Tap Bid to raise by ${fmt(s.step)}, or type a higher amount in steps of ${fmt(s.step)}.</b><span>Bidding opens at ${fmt(s.opening)}. The highest bid when the gavel falls wins.</span></div>
     <div class="rule"><span class="k num">20</span><b>One card per round</b><span>About ${s.lotSeconds} seconds each. If no one bids, the card goes to the Unclaimed board.</span></div>
     <div class="rule"><span class="k num">+${fmt(s.bonus)}</span><b>Collect all four colours</b><span>Own at least one card of every colour and your team earns ${fmt(s.bonus)} Innovation Points.</span></div>
   </div>`;
@@ -1184,7 +1204,7 @@ function debriefInsights(){
   return out;
 }
 function stackBar(tt){
-  const max = 15; // scale for the C, R, I parts
+  const max = CAP; // each of C, R, I is capped at CAP
   const seg = (v,col) => v ? `<i style="width:${Math.min(100, v/max*100).toFixed(1)}%;background:var(--${col})"></i>` : "";
   return `<div class="stackbar" aria-hidden="true">${seg(tt.c,"c")}${seg(tt.r,"r")}${seg(tt.i,"i")}</div>`;
 }
@@ -1206,11 +1226,11 @@ function hostDebrief(){
     const tr = TEAM_IDS.map(t => ({t, tt: teamTrust(t)})).sort((a,b) => b.tt.T-a.tt.T);
     body = `<div class="split">
       <section class="card stack">
-        <div class="row"><p class="eyebrow">Team trust scores · (C + R + I) ÷ S</p><span class="spacer"></span><span class="muted small">Room average <b class="num">${fmtT(roomTrust())}</b></span></div>
+        <div class="row"><p class="eyebrow">Team trust scores · (C + R + I) ÷ S</p><span class="spacer"></span><span class="muted small">Room median <b class="num">${fmtT(roomTrust())}</b></span></div>
         <div class="legend"><span><i style="background:var(--c)"></i>Credibility</span><span><i style="background:var(--r)"></i>Reliability</span><span><i style="background:var(--i)"></i>Intimacy</span><span>÷ S (lower is better)</span></div>
         <div class="rank">${tr.map((x,i) => `<div class="rank-row ${i===0&&x.tt.T>0?"first":""}"><span class="rk">${i+1}</span>
-          <span><b>${esc(teamName(x.t))}</b><br><span class="sub num">${fmt(spent(x.t))} coins · ${owned(x.t).length} ${owned(x.t).length===1?"card":"cards"}</span></span>
-          <span class="stackwrap">${stackBar(x.tt)}<span class="sub num">C+R+I = ${x.tt.N} · S = ${x.tt.S}${x.tt.floored?" (floor)":""}</span></span>
+          <span><b>${esc(teamName(x.t))}</b>${hasSet(x.t) ? ` <span class="bonus" title="Colour-set bonus, separate from trust">+${S().settings.bonus} IP</span>` : ""}<br><span class="sub num">${fmt(spent(x.t))} coins · ${owned(x.t).length} ${owned(x.t).length===1?"card":"cards"}</span></span>
+          <span class="stackwrap">${stackBar(x.tt)}<span class="sub num">C+R+I = ${x.tt.N} · S = ${fmtS(x.tt.S)}${x.tt.floored?" (floor)":""}</span></span>
           <span class="tv num">${fmtT(x.tt.T)}</span></div>`).join("")}</div>
         <p class="question">Did the team that spent the most build the most trust? What did the purple cards do?</p>
       </section>
@@ -1334,7 +1354,7 @@ function howItWorks(){
   return `<section class="card stack"><p class="eyebrow">How it works</p>
     <div class="rules" style="grid-template-columns:1fr">
       <div class="rule"><span class="k num">${fmt(s.budget)}</span><b>Your team's coins</b><span>Always shown at the top of this screen.</span></div>
-      <div class="rule"><span class="k num">+${fmt(s.step)}</span><b>Tap Bid to raise the price</b><span>The highest bid when the gavel falls wins the card.</span></div>
+      <div class="rule"><span class="k num">+${fmt(s.step)}</span><b>Tap Bid to raise by ${fmt(s.step)}, or type a higher amount in steps of ${fmt(s.step)}.</b><span>The highest bid when the gavel falls wins the card.</span></div>
       <div class="rule"><span class="k num">+${fmt(s.bonus)}</span><b>Collect all four colours</b><span>One card of every colour earns ${fmt(s.bonus)} Innovation Points.</span></div>
     </div></section>`;
 }
@@ -1357,7 +1377,7 @@ function tabletPlan(t){
     <p class="muted small">Tick the cards you want and set the most you'll pay. Only your team sees this plan.</p>
     ${["c","r","i","s"].map(k => `<section class="stack el-${k}" style="gap:.5em"><h3 style="color:var(--el);font-size:1em">${EL[k].name}</h3>${CARDS.filter(c => c.el===k).map(c => { const v = p[c.id]||{}; const sold = st.sold[c.id]; return `<div class="planrow el-${k} ${v.want?"on":""}">
       <button class="chk" data-act="want" data-card="${c.id}" aria-pressed="${!!v.want}" aria-label="Want this card">${v.want?"✓":""}</button>
-      <span class="txt">${esc(c.text)}<br><span class="pts">Lot ${lotNo(c.id)} · ${c.pts} trust pts${sold?` · sold to ${esc(teamName(sold.team))}`:""}</span></span>
+      <span class="txt">${esc(c.text)}<br><span class="pts">Lot ${lotNo(c.id)}${sold?` · sold to ${esc(teamName(sold.team))}`:""}</span></span>
       ${v.want ? `<label class="max" for="max-${c.id}">Top price<input id="max-${c.id}" type="number" inputmode="numeric" min="0" step="${st.settings.step}" placeholder="e.g. ${fmt(st.settings.opening*4)}" data-plan="${c.id}" value="${v.max||""}"></label>` : ""}
     </div>`; }).join("")}</section>`).join("")}`;
 }
@@ -1376,7 +1396,6 @@ function tabletBid(t){
   else if (L) status = `<div class="status out"><span class="ic">↑</span><span>Team ${esc(teamName(L.team))} leads at <span class="num">${fmt(L.amount)}</span><small>Bid ${fmt(next)} to take the lead.</small></span></div>`;
   else status = `<div class="status idle"><span class="ic">•</span><span>No bids yet<small>Open the bidding at ${fmt(next)}.</small></span></div>`;
   const can = amt => !leading && !blocked && !pending && amt <= myLeft;
-  const jumps = [next + step, next + step*3];
   let fb = "";
   if (ui.bid && ui.bid.round===st.round) {
     const b = ui.bid;
@@ -1385,13 +1404,22 @@ function tabletBid(t){
     else if (b.status==="beaten") fb = `<div class="feedback err" role="status">Your ${fmt(b.amount)} arrived just after Team ${esc(teamName(b.by))}'s bid.</div>`;
     else if (b.status==="failed") fb = `<div class="feedback err" role="alert">${esc(b.msg)}</div>`;
   }
-  return `${lotCard(st.cardId, pl && pl.want ? `<p class="pts" style="color:var(--accent-ink)">On your team's list${pl.max?` · top price ${fmt(pl.max)}`:""}</p>` : "")}
+  const dis = can(next) ? "" : "disabled";
+  return `${lotCard(st.cardId, pl && pl.want ? `<p class="pts" style="color:var(--accent-ink)">On your team's list${pl.max?` · top price ${fmt(pl.max)}`:""}</p>` : "", true)}
     ${callShown ? `<div class="status no" role="alert"><span class="ic">!</span><span>${st.call===1?"Going once…":"Going twice…"}<small>Bid now or the card is sold.</small></span></div>` : ""}
     ${status}
     <div class="bidarea">
       <button class="btn primary bidmain ${pending?"busy":""}" data-act="bid" data-amount="${next}" ${can(next)?"":"disabled"} aria-busy="${!!pending}">
         <span>Bid ${fmt(next)}</span><span class="sub">${L ? `+${fmt(step)}` : "opening bid"} · leaves you ${fmt(Math.max(0, myLeft-next))}</span></button>
-      <div class="jumps">${jumps.map(a => `<button class="btn" data-act="bid" data-amount="${a}" ${can(a)?"":"disabled"}>Jump to ${fmt(a)}</button>`).join("")}</div>
+      <form class="custombid" data-form="custom" novalidate>
+        <label class="eyebrow" for="custom-bid">Or type a higher amount</label>
+        <div class="cb-row"><input id="custom-bid" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="send" placeholder="${fmt(next + step)}" value="${esc(ui.customBid)}" aria-describedby="custom-hint" ${dis}>
+          <button type="submit" class="btn" ${dis}>Bid this amount</button></div>
+        <p id="custom-hint" class="muted small">Minimum ${fmt(next)} · you have ${fmt(myLeft)}</p>
+        ${ui.customMsg ? `<p class="feedback err" role="alert">${esc(ui.customMsg)}</p>` : ""}
+        ${ui.customOffer ? `<div class="feedback wait cb-offer" role="alert"><span>Bids go up in steps of ${fmt(step)}. Bid ${fmt(ui.customOffer)} instead?</span>
+          <span class="cb-row"><button type="button" class="btn primary" data-act="custom-yes">Bid ${fmt(ui.customOffer)}</button><button type="button" class="btn ghost" data-act="custom-no">Cancel</button></span></div>` : ""}
+      </form>
       ${fb}
     </div>`;
 }
@@ -1402,14 +1430,15 @@ function tabletSold(t){
   if (!ls.team) msg = `<div class="status idle"><span class="ic">–</span><span>No bids on this card<small>It goes to the Unclaimed board for the debrief.</small></span></div>`;
   else if (ls.team===t) msg = `<div class="status lead"><span class="ic">✓</span><span>Your team won it for <span class="num">${fmt(ls.price)}</span><small>${fmt(left(t))} coins left.</small></span></div>`;
   else msg = `<div class="status idle"><span class="ic">–</span><span>Sold to Team ${esc(teamName(ls.team))} for <span class="num">${fmt(ls.price)}</span><small>Your coins are unchanged: ${fmt(left(t))}.</small></span></div>`;
-  return `${msg}${lotCard(ls.cardId)}<p class="muted" style="text-align:center">${nextLotId() ? `Next: Round ${nextRoundNo()}. This screen changes on its own.` : "That was the last card."}</p>`;
+  return `${msg}${lotCard(ls.cardId, "", true)}<p class="muted" style="text-align:center">${nextLotId() ? `Next: Round ${nextRoundNo()}. This screen changes on its own.` : "That was the last card."}</p>`;
 }
 function tabletDebrief(t){
   const st = S(); const cs = owned(t); const tt = teamTrust(t);
   return `<section class="card stack"><p class="eyebrow">Your team's trust score</p>
       <div class="row"><span class="big num" style="font-size:2.6em">${fmtT(tt.T)}</span><span class="muted num">= ${trustBreakdown(tt)}</span></div>
+      ${hasSet(t) ? `<p><span class="bonus">+${st.settings.bonus} IP</span> <span class="muted small">Colour-set bonus: you own all four colours. It's awarded separately and isn't part of the trust score.</span></p>` : ""}
       ${stackBar(tt)}
-      <div class="legend"><span><i style="background:var(--c)"></i>C ${tt.c}</span><span><i style="background:var(--r)"></i>R ${tt.r}</span><span><i style="background:var(--i)"></i>I ${tt.i}</span><span>S ${tt.S}</span></div>
+      <div class="legend"><span><i style="background:var(--c)"></i>C ${tt.c}</span><span><i style="background:var(--r)"></i>R ${tt.r}</span><span><i style="background:var(--i)"></i>I ${tt.i}</span><span>S ${fmtS(tt.S)}</span></div>
       <details class="how"><summary>How this was scored</summary><div class="inner">${methodHtml(true)}</div></details>
     </section>
     <section class="stack" style="gap:.5em"><p class="eyebrow">Your cards · ${fmt(spent(t))} coins spent</p>
@@ -1453,26 +1482,28 @@ setInterval(() => { if (ui.bid && ui.bid.status==="sending" && Date.now()-ui.bid
 
 /* ===================== actions ===================== */
 function doBid(team, amount){
-  const st = S(); const L = leader(); const step = st.settings.step;
+  const st = S(); const step = st.settings.step;
   if (ui.bid && ui.bid.status==="sending") return;
-  if (L && amount <= L.amount) {   // the price moved between seeing the button and tapping it
-    ui.bid = {status:"failed", amount, round:st.round, at:Date.now(), msg:`Not sent: the price just moved to ${fmt(L.amount)}. Check the new bid and tap again.`};
+  const min = minBid();
+  if (amount < min) {   // the price moved between seeing the screen and tapping: don't send, keep the typed value
+    ui.bid = {status:"failed", amount, round:st.round, at:Date.now(), msg:`Not sent: the price moved. The minimum bid is now ${fmt(min)}.`};
     scheduleRender(); return;
   }
-  // the app keeps the original bid rule: raise the current price by one step or a jump of whole steps
-  const base = L ? L.amount : st.settings.opening - step;
-  const jump = amount - base;
   ui.bid = {status:"sending", amount, round:st.round, at:Date.now()};
+  ui.customOffer = null; ui.customMsg = "";
   scheduleRender();
-  placeBid(team, jump).then(res => {
+  placeBid(team, amount).then(res => {
     if (!ui.bid || ui.bid.round!==st.round) return;
     if (!res.ok) {
       const msg = res.reason==="funds" ? `Not sent: you need ${fmt(res.amount)} coins and have ${fmt(left(team))}.`
         : res.reason==="leading" ? "Not sent: your team is already leading."
         : res.reason==="closed" ? "Not sent: bidding on this card has closed."
+        : res.reason==="low" ? `Not sent: the minimum bid is now ${fmt(res.min)}.`
+        : res.reason==="step" ? `Not sent: bids go up in steps of ${fmt(step)}.`
         : "Not sent. Check the connection and tap again.";
       ui.bid = {status:"failed", amount, round:st.round, msg, at:Date.now()};
     } else {
+      ui.customBid = "";   // clear the typed amount once a bid is accepted by Firebase
       const L2 = leader();
       if (L2 && L2.team===team && L2.amount===res.amount) ui.bid = {status:"accepted", amount:res.amount, round:st.round, at:Date.now()};
       else ui.bid = {status:"beaten", amount:res.amount, round:st.round, by: L2 ? L2.team : null, at:Date.now()};
@@ -1480,6 +1511,22 @@ function doBid(team, amount){
     const keep = ui.bid; setTimeout(() => { if (ui.bid===keep) { ui.bid = null; scheduleRender(); } }, 4000);
     scheduleRender();
   });
+}
+function submitCustom(team){
+  const st = S(); const step = st.settings.step; const next = minBid(); const have = left(team);
+  const raw = String(ui.customBid||"").trim().replace(/[,\s]/g, "");
+  ui.customMsg = ""; ui.customOffer = null;
+  if (!/^\d+$/.test(raw)) { ui.customMsg = "Type a number."; return; }
+  const amount = Number(raw);
+  if (amount < next) { ui.customMsg = `The minimum bid is now ${fmt(next)}.`; return; }
+  if ((amount - next) % step !== 0) {
+    let offer = next + Math.floor((amount - next) / step) * step;            // round down to a valid step
+    if (offer < next) offer = next + Math.ceil((amount - next) / step) * step; // …or up if that falls below the minimum
+    if (offer > have) { ui.customMsg = `You have ${fmt(have)} coins.`; return; }
+    ui.customOffer = offer; return;                                            // ask before sending
+  }
+  if (amount > have) { ui.customMsg = `You have ${fmt(have)} coins.`; return; }
+  doBid(team, amount);
 }
 function doCast(t){
   if (ui.vote.sending) return;
@@ -1553,10 +1600,12 @@ $app.addEventListener("click", e => {
     case "call": if (once(a, 500)) callOut(Number(b.dataset.n)); break;
     case "sell": if (dockOnce(a)) { const L = leader(); sell(); if (L) toast("ok", `Sold to ${teamName(L.team)} for ${fmt(L.amount)}.`); } break;
     case "manual": ui.manual = !ui.manual; break;
-    case "bid-for": if (once("bidfor", 400)) placeBid(b.dataset.team, st.settings.step); break;
+    case "bid-for": if (once("bidfor-"+b.dataset.team, 400)) placeBid(b.dataset.team, nextBidAmount()); break;   // per team, so two paddles can be entered back to back
     case "pitch": if (once(a)) hostWrite(s2 => { s2.pitchAt = now(); }); break;
     case "dtab": ui.dtab = b.dataset.tab; break;
     case "bid": if (team) doBid(team, Number(b.dataset.amount)); break;
+    case "custom-yes": if (team && ui.customOffer) doBid(team, ui.customOffer); break;
+    case "custom-no": ui.customOffer = null; break;
     case "want": if (team) { const p = plan(team); const id=b.dataset.card; p[id] = Object.assign({}, p[id], {want: !(p[id]&&p[id].want)}); savePlan(team,p); } break;
     case "pick-vote": {
       const id = b.dataset.card; const need = Math.min(3, voteCandidates().length);
@@ -1568,6 +1617,17 @@ $app.addEventListener("click", e => {
     case "next-voter": ui.vote = {sel:[], done:false, sending:false, error:""}; break;
   }
   scheduleRender();
+});
+$app.addEventListener("input", e => {
+  if (e.target.id==="custom-bid") { ui.customBid = e.target.value; if (ui.customMsg || ui.customOffer) { ui.customMsg = ""; ui.customOffer = null; scheduleRender(); } }
+});
+$app.addEventListener("submit", e => {
+  if (e.target.dataset.form!=="custom") return;
+  e.preventDefault();
+  const team = ui.role && ui.role!=="host" ? ui.role : null;
+  const inp = document.getElementById("custom-bid");
+  if (!team || !inp || inp.disabled) return;
+  ui.customBid = inp.value; submitCustom(team); scheduleRender();
 });
 $app.addEventListener("change", e => {
   const el = e.target;
