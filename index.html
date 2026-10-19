@@ -1,0 +1,1287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Leadership Auction</title>
+<meta name="description" content="HR X Offsite live trust-principle auction: projector console and team tablets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;600;700;800&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: auction-house console. A projected "room" view (lot on the block, live bid, paddles, scoreboard) and a one-hand team tablet view. */
+:root{
+  --bg:#ECEEF3; --surface:#FFFFFF; --raise:#F6F7FA; --ink:#131929; --muted:#596178; --line:#D3D8E2;
+  --brass:#9C6F14; --brass-ink:#FFFFFF; --brass-soft:#F4E8CD;
+  --c:#2B66D3; --r:#138A63; --i:#C9620E; --s:#7445CC; --on-el:#FFFFFF;
+  --c-soft:#E2EBFB; --r-soft:#DCF2E8; --i-soft:#FBEADB; --s-soft:#ECE3FA;
+  --good:#138A63; --alert:#B9381A; --alert-soft:#FBE4DD;
+  --f-display:"Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --f-body:"Manrope", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r-sm:6px; --r-md:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D111B; --surface:#161C2A; --raise:#1C2333; --ink:#E8EBF2; --muted:#98A1B4; --line:#2A3244;
+  --brass:#DDAA4C; --brass-ink:#1A1304; --brass-soft:#352A12;
+  --c:#74A1FF; --r:#48CB98; --i:#F4A257; --s:#AD90FF; --on-el:#0D111B;
+  --c-soft:#182844; --r-soft:#123129; --i-soft:#372512; --s-soft:#261E44;
+  --good:#48CB98; --alert:#FF8A6B; --alert-soft:#3A1C14; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D111B; --surface:#161C2A; --raise:#1C2333; --ink:#E8EBF2; --muted:#98A1B4; --line:#2A3244;
+  --brass:#DDAA4C; --brass-ink:#1A1304; --brass-soft:#352A12;
+  --c:#74A1FF; --r:#48CB98; --i:#F4A257; --s:#AD90FF; --on-el:#0D111B;
+  --c-soft:#182844; --r-soft:#123129; --i-soft:#372512; --s-soft:#261E44;
+  --good:#48CB98; --alert:#FF8A6B; --alert-soft:#3A1C14; color-scheme:dark;
+}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.mono{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.muted{color:var(--muted)}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;border:1px solid var(--line);background:var(--surface);
+  border-radius:var(--r-sm);padding:.6em 1em;font-weight:700;min-height:44px;transition:transform .08s ease, background .15s}
+.btn:hover{background:var(--raise)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.danger{color:var(--alert);border-color:color-mix(in srgb, var(--alert) 45%, var(--line))}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.big{font-size:1.15rem;padding:.75em 1.4em;min-height:56px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.spacer{flex:1}
+
+/* ---------- start screen ---------- */
+.start{max-width:880px;margin:0 auto;padding-block:clamp(24px,6vh,72px);display:grid;gap:28px}
+.start h1{font-size:clamp(2.4rem,6vw,4.2rem)}
+.start .lede{font-size:1.1rem;max-width:60ch;color:var(--muted)}
+.choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.paddle{display:grid;gap:6px;justify-items:start;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);padding:16px;min-height:96px}
+.paddle:hover{border-color:var(--brass)}
+.paddle .pno{font-family:var(--f-display);font-size:2rem;line-height:1;color:var(--brass)}
+.paddle b{font-size:1.05rem}
+.host-pick{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px dashed var(--line);border-radius:var(--r-md);padding:16px}
+.notice{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);padding:14px 16px;font-size:.95rem}
+.notice.warn{border-color:color-mix(in srgb, var(--alert) 40%, var(--line));background:var(--alert-soft)}
+
+/* ---------- host shell ---------- */
+.host{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;gap:14px;padding-block:14px}
+.bar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:30px;height:30px;color:var(--brass);flex:none}
+.brand h1{font-size:1.45rem}
+.brand .mono{color:var(--muted)}
+.phases{display:flex;flex-wrap:wrap;gap:4px}
+.phases button{border:1px solid transparent;background:none;border-radius:999px;padding:.35em .85em;font-weight:600;font-size:.9rem;color:var(--muted)}
+.phases button[aria-current="step"]{background:var(--ink);color:var(--bg)}
+.phases button:hover:not([aria-current="step"]){border-color:var(--line)}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:.25em .75em;font-size:.8rem;font-weight:700;background:var(--surface)}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--good)}
+.pill.off i{background:var(--alert)}
+.stage{min-width:0}
+
+/* ---------- lot card ---------- */
+.lot{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;display:grid;grid-template-rows:auto 1fr;min-width:0}
+.lot .band{background:var(--el);color:var(--on-el);display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 18px}
+.lot .band b{font-weight:800;letter-spacing:.02em}
+.lot .face{padding:clamp(18px,3vw,40px);display:grid;align-content:center;gap:18px}
+.lot .text{font-family:var(--f-display);font-weight:500;font-size:clamp(1.7rem,3.6vw,3.4rem);line-height:1.12;text-wrap:balance}
+.lot .gloss{color:var(--muted)}
+.el-c{--el:var(--c);--el-soft:var(--c-soft)} .el-r{--el:var(--r);--el-soft:var(--r-soft)}
+.el-i{--el:var(--i);--el-soft:var(--i-soft)} .el-s{--el:var(--s);--el-soft:var(--s-soft)}
+
+/* ---------- auction block ---------- */
+.block{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.bidpanel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:clamp(16px,2.4vw,28px);display:grid;gap:16px;align-content:start;min-width:0}
+.bignum{font-family:var(--f-display);font-weight:700;font-size:clamp(3.6rem,8vw,7.5rem);line-height:.95}
+.bignum small{font-family:var(--f-body);font-size:.22em;font-weight:700;color:var(--muted);letter-spacing:.06em;margin-left:.3em}
+.leader{font-size:clamp(1.2rem,2vw,1.7rem);font-weight:800}
+.callout{display:inline-block;font-family:var(--f-display);font-weight:700;font-size:clamp(1.4rem,2.6vw,2.2rem);color:var(--alert);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+.timer{display:grid;gap:6px}
+.timer .track{height:8px;border-radius:99px;background:var(--raise);overflow:hidden;border:1px solid var(--line)}
+.timer .fill{height:100%;background:var(--brass);width:100%;transition:width .25s linear}
+.timer.over .fill{background:var(--alert)}
+.paddles{display:grid;gap:6px}
+.paddles .p{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;border-radius:var(--r-sm);background:var(--raise)}
+.paddles .p.top{background:var(--brass-soft);font-weight:800}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+.backup{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.backup .btn{min-height:36px;padding:.35em .7em;font-size:.85rem}
+
+.soldcard{display:grid;gap:18px;justify-items:center;text-align:center;padding:clamp(20px,5vh,56px) 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+.stamp{font-family:var(--f-display);font-weight:700;font-size:clamp(3rem,9vw,7rem);line-height:1;color:var(--brass);transform:rotate(-4deg);border:4px solid currentColor;padding:.05em .35em;border-radius:8px;animation:thump .45s cubic-bezier(.2,1.6,.4,1)}
+.stamp.none{color:var(--muted)}
+@keyframes thump{from{transform:rotate(-4deg) scale(1.6);opacity:0}to{transform:rotate(-4deg) scale(1);opacity:1}}
+.soldcard .what{font-family:var(--f-display);font-size:clamp(1.3rem,2.6vw,2.1rem);max-width:30ch;text-wrap:balance}
+
+/* ---------- scoreboard ---------- */
+.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.team{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;display:grid;gap:6px;min-width:0}
+.team.lead{border-color:var(--brass);box-shadow:0 0 0 2px var(--brass) inset}
+.team .tn{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team .coins{font-family:var(--f-display);font-weight:700;font-size:1.9rem;line-height:1}
+.pips{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.pip{min-width:24px;height:24px;border-radius:5px;border:2px solid var(--el);display:grid;place-items:center;font-size:.75rem;font-weight:800;color:var(--el)}
+.pip.on{background:var(--el);color:var(--on-el)}
+.bonus{font-size:.72rem;font-weight:800;background:var(--brass);color:var(--brass-ink);border-radius:4px;padding:2px 6px;white-space:nowrap}
+
+/* ---------- panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:clamp(16px,2.2vw,26px);display:grid;gap:14px;align-content:start;min-width:0}
+.panel h2{font-size:clamp(1.5rem,2.6vw,2.3rem)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hero-title{font-size:clamp(2.2rem,5vw,4.4rem)}
+
+.equation{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .5em;font-family:var(--f-display);font-weight:700;font-size:clamp(1.6rem,4vw,3.4rem);line-height:1.1}
+.equation .frac{display:inline-grid;text-align:center}
+.equation .frac span:first-child{border-bottom:3px solid var(--ink);padding:0 .2em .05em}
+.equation .frac span:last-child{padding-top:.05em}
+.eqc{color:var(--c)} .eqr{color:var(--r)} .eqi{color:var(--i)} .eqs{color:var(--s)}
+.elements{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.eltile{border-radius:var(--r-md);background:var(--el-soft);padding:14px;display:grid;gap:6px;align-content:start}
+.eltile b{color:var(--el);font-size:1.05rem}
+.source{font-size:.85rem;color:var(--muted)}
+.rules{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.rules li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
+.rules li .k{font-family:var(--f-display);font-weight:700;font-size:1.5rem;color:var(--brass);min-width:3.2ch}
+
+.catalogue{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.col{display:grid;gap:8px;align-content:start}
+.col h3{font-family:var(--f-body);font-size:.95rem;font-weight:800;color:var(--el);display:flex;justify-content:space-between}
+.mini{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--el);border-radius:var(--r-sm);padding:8px 10px;display:grid;gap:2px;font-size:.92rem;line-height:1.35}
+.mini .mono{font-size:.68rem;color:var(--muted)}
+.mini.sold{opacity:.5}
+.mini.unc{border-style:dashed}
+.mini .who{font-size:.75rem;font-weight:800;color:var(--muted)}
+button.mini{text-align:left;width:100%}
+button.mini:hover:not(:disabled){border-color:var(--brass);border-left-color:var(--el)}
+
+.bars{display:grid;gap:12px}
+.bar-row{display:grid;grid-template-columns:9.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center}
+.bar-row .lbl{font-weight:800;color:var(--el)}
+.bar-row .trk{height:26px;background:var(--raise);border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.bar-row .fil{height:100%;background:var(--el);border-radius:4px 0 0 4px;transition:width .6s ease}
+.bar-row .val{text-align:right;font-weight:800}
+.question{font-family:var(--f-display);font-size:clamp(1.15rem,2vw,1.6rem);line-height:1.25}
+
+.holdings{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.holding{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px;display:grid;gap:6px;align-content:start;min-width:0}
+.holding .mini{font-size:.82rem}
+
+.tally{display:grid;gap:8px}
+.tally .t{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.tally .t .trk{grid-column:1/-1;height:10px;background:var(--raise);border-radius:5px;overflow:hidden}
+.tally .t .fil{height:100%;background:var(--el);transition:width .5s ease}
+.tally .t .txt{font-size:.95rem;line-height:1.3}
+.dots{font-weight:800}
+
+.top5{display:grid;gap:12px;counter-reset:rank}
+.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:10px solid var(--el);border-radius:var(--r-md);padding:14px 18px;animation:rise .5s ease both}
+.top .rank{font-family:var(--f-display);font-weight:700;font-size:2.6rem;line-height:1;color:var(--brass);min-width:1.4ch}
+.top .t{font-family:var(--f-display);font-size:clamp(1.2rem,2.4vw,2rem);line-height:1.15}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.field{display:grid;gap:4px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.field input{font:inherit;font-weight:600;color:var(--ink);background:var(--raise);border:1px solid var(--line);border-radius:var(--r-sm);padding:.5em .6em;min-height:42px;width:100%}
+.joined{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.jt{border:1px solid var(--line);border-radius:var(--r-md);padding:12px;background:var(--surface);display:grid;gap:4px}
+.jt .state{font-size:.85rem;font-weight:800;color:var(--muted)}
+.jt.on{border-color:var(--good)}
+.jt.on .state{color:var(--good)}
+
+.confirm{border:1px solid var(--alert);background:var(--alert-soft);border-radius:var(--r-md);padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.drawer{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;display:grid;gap:12px}
+
+/* ---------- tablet ---------- */
+.tab{max-width:760px;margin:0 auto;padding-block:14px 28px;display:grid;gap:14px}
+.tabhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.tabhead .tn{font-family:var(--f-display);font-weight:700;font-size:1.5rem;line-height:1.1}
+.tabhead .coins{font-family:var(--f-display);font-weight:700;font-size:2rem;line-height:1}
+.status{border-radius:var(--r-md);padding:14px 16px;font-weight:800;font-size:1.15rem;text-align:center}
+.status.lead{background:var(--brass-soft);color:var(--brass)}
+.status.out{background:var(--alert-soft);color:var(--alert)}
+.status.idle{background:var(--raise);color:var(--muted)}
+.bidbtns{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
+.bidbtns .btn{min-height:84px;font-size:1.25rem;flex-direction:column;gap:2px}
+.bidbtns .btn small{font-size:.75rem;font-weight:700;opacity:.85}
+.tab .lot .text{font-size:clamp(1.5rem,5vw,2.3rem)}
+.planrow{display:grid;grid-template-columns:auto minmax(0,1fr) 6.5em;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--el);border-radius:var(--r-sm);padding:8px 10px}
+.planrow input[type=number]{font:inherit;font-weight:700;width:100%;background:var(--raise);border:1px solid var(--line);border-radius:var(--r-sm);padding:.4em .5em;color:var(--ink);min-height:40px}
+.chk{width:30px;height:30px;border-radius:6px;border:2px solid var(--el);background:transparent;display:grid;place-items:center;font-weight:800;color:var(--on-el)}
+.chk[aria-pressed="true"]{background:var(--el)}
+.votecard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--el);border-radius:var(--r-sm);padding:12px;min-height:56px}
+.votecard[aria-pressed="true"]{border-color:var(--brass);border-left-color:var(--el);box-shadow:0 0 0 2px var(--brass) inset}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--brass)}
+.votecard[aria-pressed="true"] .dot{background:var(--brass)}
+.foot{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+
+/* ---------- trust scoring ---------- */
+.wts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.wt{display:inline-flex;align-items:center;gap:4px;border-radius:5px;padding:2px 8px;font-weight:800;font-size:.85rem;background:var(--raise);color:var(--muted);border:1px solid var(--line)}
+.wt.on{background:var(--el-soft);color:var(--el);border-color:transparent}
+.wt.pts{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.wt-c{--el:var(--c);--el-soft:var(--c-soft)} .wt-r{--el:var(--r);--el-soft:var(--r-soft)} .wt-i{--el:var(--i);--el-soft:var(--i-soft)} .wt-s{--el:var(--s);--el-soft:var(--s-soft)}
+.why{font-size:.92rem;color:var(--muted);max-width:62ch}
+.mini .wts{margin-top:2px}
+.mini .wt{font-size:.7rem;padding:1px 5px}
+.trust{font-family:var(--f-display);font-weight:700;line-height:1}
+.team .trustline{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-top:1px solid var(--line);padding-top:6px;font-size:.82rem;color:var(--muted)}
+.team .trustline .trust{font-size:1.25rem;color:var(--ink)}
+.delta{border:1px dashed var(--brass);border-radius:var(--r-sm);padding:8px 12px;text-align:center;font-weight:700}
+.delta .trust{font-size:1.3rem;color:var(--brass)}
+.method{display:grid;gap:10px;margin:0;padding-left:1.2em}
+.method li{padding-left:.2em}
+.formula{font-family:var(--f-mono);font-size:.9rem;background:var(--raise);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;overflow-x:auto;white-space:nowrap}
+.caveat{border-left:4px solid var(--brass);background:var(--brass-soft);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:10px 14px;font-size:.92rem}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+table.scores{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem}
+table.scores th,table.scores td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.scores th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--raise)}
+table.scores td.n{text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+table.scores td.n.z{color:var(--line)}
+table.scores tr td:first-child{border-left:6px solid var(--el)}
+.rank-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:var(--r-sm);background:var(--raise)}
+.rank-row.first{background:var(--brass-soft)}
+.rank-row .rk{font-family:var(--f-display);font-weight:700;font-size:1.6rem;color:var(--brass);min-width:1.4ch}
+.rank-row .trust{font-size:1.7rem}
+
+/* ---------- round start + connection ---------- */
+.btn.start{background:var(--brass);border-color:var(--brass);color:var(--brass-ink);font-size:1.05rem;padding:.55em 1.2em;box-shadow:0 0 0 4px var(--brass-soft)}
+.btn.start.huge{font-size:clamp(1.4rem,2.6vw,2rem);min-height:76px;padding:.5em 1.6em}
+.roundtag{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--bg);border-radius:999px;padding:.3em .9em}
+.ready{display:grid;gap:22px;justify-items:center;text-align:center;padding:clamp(24px,6vh,64px) 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+.ready .bignum{font-size:clamp(4rem,12vw,9rem)}
+.conn{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;border-radius:var(--r-md);padding:12px 16px;font-weight:600;border:2px solid var(--alert);background:var(--alert-soft);color:var(--ink)}
+.conn b{color:var(--alert)}
+.conn.soft{border-width:1px;border-color:color-mix(in srgb, var(--brass) 60%, var(--line));background:var(--brass-soft)}
+.conn.soft b{color:var(--brass)}
+.pill.warn i{background:var(--brass)}
+
+@media (max-width:1100px){
+  .score,.joined,.holdings{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .catalogue,.elements{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:820px){
+  .block,.grid2,.grid3{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:520px){
+  .catalogue,.elements{grid-template-columns:minmax(0,1fr)}
+  .bidbtns{grid-template-columns:1fr 1fr}
+  .bidbtns .btn:first-child{grid-column:1/-1}
+  .bar-row{grid-template-columns:minmax(0,1fr) 4.5em}
+  .bar-row .trk{grid-column:1/-1;grid-row:2}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script type="module">
+(() => {
+"use strict";
+
+/* ===================== content ===================== */
+const EL = {
+  c:{name:"Credibility", gloss:"We know what we're talking about"},
+  r:{name:"Reliability", gloss:"We do what we say"},
+  i:{name:"Intimacy", gloss:"People feel safe bringing things to us"},
+  s:{name:"Low self-orientation", gloss:"We focus on the employee, not on ourselves"}
+};
+const CARDS = [
+  ["c1","c","We know the business, not just the policy."],
+  ["c2","c","Our advice is backed by data, not opinion."],
+  ["c3","c","We give a clear answer, not “it depends.”"],
+  ["c4","c","We bring a recommendation, not just a list of options."],
+  ["c5","c","We keep our expertise current, from labour law to AI."],
+  ["r1","r","We close every case on the date we promised."],
+  ["r2","r","Employees hear from us before they have to chase us."],
+  ["r3","r","The same question gets the same answer, whoever you ask in HR."],
+  ["r4","r","If we are going to miss a deadline, we say so before it passes."],
+  ["r5","r","Every request is acknowledged within one working day."],
+  ["i1","i","We listen to understand before we quote the policy."],
+  ["i2","i","Every case is a person, not a ticket."],
+  ["i3","i","What you tell us in confidence stays in confidence."],
+  ["i4","i","Employees can bring us bad news without fear."],
+  ["i5","i","We ask “how are you?” and wait for the real answer."],
+  ["s1","s","We say “let me find a way” before “that’s not possible.”"],
+  ["s2","s","We measure success by the employee’s outcome, not our process."],
+  ["s3","s","We change our process when it stops serving people."],
+  ["s4","s","We give the credit to managers and employees, not to HR."],
+  ["s5","s","We design every service from the employee’s side of the desk."]
+].map(([id,el,text]) => ({id,el,text}));
+
+/* ----- Trust scoring (HNI facilitation design, not a validated measure) -----
+   Each card is rated 0-3 on the four elements of the Trust Equation:
+   3 = the element the behaviour mainly builds (every card has exactly one),
+   2 = a strong secondary effect, 1 = a clear secondary effect, 0 = no direct effect.
+   For S the rating is how much the behaviour LOWERS self-orientation.
+   Card trust points = C + R + I + S.
+   Team trust score  = (sum C + sum R + sum I) / S_team,
+   where S_team = max(S_FLOOR, S_START - sum S). */
+const S_START = 10, S_FLOOR = 1;
+const WEIGHTS = {
+  c1:[3,0,0,1,"Knowing the business is the core of credibility. Looking past our own rulebook also lowers self-orientation."],
+  c2:[3,1,0,0,"Evidence is what makes expert advice believable. It also makes advice repeatable: the same facts give the same answer."],
+  c3:[3,0,0,1,"A clear answer shows command of the subject. Hedging protects HR, so dropping it also lowers self-orientation."],
+  c4:[3,0,0,0,"Offering a judgement, not just options, is expertise in action. A pure credibility behaviour."],
+  c5:[3,0,0,0,"Up-to-date knowledge is the base that credibility rests on."],
+  r1:[0,3,0,0,"Keeping a dated promise is the definition of reliability."],
+  r2:[0,3,0,1,"Proactive updates are dependable follow-through. Sparing the employee the chase also puts their time ahead of ours."],
+  r3:[1,3,0,0,"Consistency across the team is reliability. It also signals shared expertise."],
+  r4:[0,3,1,0,"Warning early protects the promise. Being candid about a slip also makes it safer to be open with us."],
+  r5:[0,3,0,0,"A fixed response standard is a small promise kept every time."],
+  i1:[0,0,3,2,"Listening first is the heart of intimacy. Putting the person before the policy lowers self-orientation strongly, so it scores 2 there."],
+  i2:[0,0,3,1,"Treating the case as a person builds safety. It also moves attention from our process to them."],
+  i3:[0,1,3,0,"Confidentiality is what makes people safe to speak. Keeping a confidence is also a kept promise."],
+  i4:[0,0,3,0,"Being able to raise bad news without fear is intimacy in its purest form."],
+  i5:[0,0,3,1,"Genuine interest builds closeness, and waiting for the answer keeps the focus on them, not on us."],
+  s1:[0,0,1,3,"Looking for a way to help puts the employee's goal first. It also tells them we're on their side."],
+  s2:[0,0,0,3,"Judging ourselves by the employee's outcome is the clearest shift away from self-orientation."],
+  s3:[0,0,0,3,"Changing our own process for people's sake puts them ahead of our comfort."],
+  s4:[0,0,0,3,"Giving the credit away removes our need to look good."],
+  s5:[0,0,1,3,"Designing from the employee's side keeps attention on them. It also needs real understanding of their experience."]
+};
+CARDS.forEach(c => { const w = WEIGHTS[c.id]; c.w = {c:w[0], r:w[1], i:w[2], s:w[3]}; c.why = w[4]; c.pts = w[0]+w[1]+w[2]+w[3]; });
+const CARD = Object.fromEntries(CARDS.map(c => [c.id,c]));
+function trustOf(ids){
+  const t = {c:0,r:0,i:0,s:0};
+  ids.forEach(id => { const c = CARD[id]; if (c) { t.c+=c.w.c; t.r+=c.w.r; t.i+=c.w.i; t.s+=c.w.s; } });
+  const N = t.c + t.r + t.i;
+  const S = Math.max(S_FLOOR, S_START - t.s);
+  return {c:t.c, r:t.r, i:t.i, sred:t.s, N, S, T: N / S, floored: S_START - t.s < S_FLOOR};
+}
+const fmtT = x => (Math.round(x*100)/100).toFixed(2);
+// Lots alternate colours so every element comes up early
+const ORDER = [];
+for (let n=1;n<=5;n++) for (const e of ["c","r","i","s"]) ORDER.push(e+n);
+const lotNo = id => String(ORDER.indexOf(id)+1).padStart(2,"0");
+const TEAM_IDS = ["t1","t2","t3","t4","t5"];
+const DEFAULTS = {budget:1000, opening:50, step:50, bonus:100, lotSeconds:60, strategyMin:5,
+  teams:["Wisdom","Collaboration","Innovation","Sustainability","Humanity"]};
+const PHASES = [["join","Join"],["rules","Rules"],["strategy","Strategy"],["auction","Auction"],["debrief","Debrief"],["vote","Dot vote"],["top5","Top 5"]];
+
+function freshState(settings, prev){
+  return {phase:"join", phaseAt:now(), round: prev ? (prev.round||0) : 0, roundNo:0, cardId:null, openedAt:0,
+    call:0, callHigh:0, sold:{}, unclaimed:[], lastSale:null,
+    voteRound: prev ? (prev.voteRound||1)+1 : 1, pitchAt:0,
+    settings: JSON.parse(JSON.stringify(settings || DEFAULTS))};
+}
+
+/* ===================== helpers ===================== */
+const $app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const fmt = n => Number(n||0).toLocaleString("en-US");
+const clone = o => JSON.parse(JSON.stringify(o));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { v===null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch(e){} };
+// The screen's role lives with the browser tab, so several tabs on one laptop can each be a different team.
+const roleKey = () => "la-role-" + (new URLSearchParams(location.search).get("game") || "hrx-offsite");
+const roleGet = () => { try { return sessionStorage.getItem(roleKey()); } catch(e){ return null; } };
+const roleSet = v => { try { v===null ? sessionStorage.removeItem(roleKey()) : sessionStorage.setItem(roleKey(), v); } catch(e){} };
+
+/* ===================== Firebase connection ===================== */
+// Your Firebase project. Web API keys are not secret; the database rules decide who can read and write.
+const FIREBASE_VERSION = "13.0.0";
+const firebaseConfig = {
+  apiKey: "AIzaSyCeXaIAma8uI1ED5v6SliLyX_aiTxHkR38",
+  authDomain: "leadership-auction.firebaseapp.com",
+  databaseURL: "https://leadership-auction-default-rtdb.firebaseio.com",
+  projectId: "leadership-auction",
+  storageBucket: "leadership-auction.firebasestorage.app",
+  messagingSenderId: "971684678095",
+  appId: "1:971684678095:web:7a225f3742e57d6f44eaba"
+};
+// One database path per game. Add ?game=rehearsal to the address for a separate practice game.
+const GAME = ((new URLSearchParams(location.search).get("game") || "hrx-offsite").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40)) || "hrx-offsite";
+const BASE = "games/" + GAME;
+
+/* ===================== store ===================== */
+// mode: "connecting" | "live" | "offline" (Firebase couldn't load: warn, never fall back silently) | "practice" (facilitator chose one screen)
+const store = {mode:"connecting", state:null, gotState:false, bids:{}, votes:{}, presence:{}, canWrite:true, error:"",
+  connected:false, everConnected:false, denied:false, stalled:false, writeFail:false, loadError:"",
+  netOnline: navigator.onLine !== false};
+let fb = null, fdb = null, serverOffset = 0, presRef = null;
+const CLIENT_ID = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+function now(){ return Date.now() + serverOffset; }   // server-aligned clock, so every screen's timers agree
+function stamp(){ return (store.mode==="live" && fb) ? fb.serverTimestamp() : now(); }
+
+function S(){ return store.state || freshState(DEFAULTS); }
+function teamName(t){ const st=S(); return (st.settings.teams||DEFAULTS.teams)[TEAM_IDS.indexOf(t)] || t; }
+function canSync(){ return store.mode==="practice" || (store.mode==="live" && store.connected && !store.denied); }
+
+/* Firebase drops empty arrays, empty objects and nulls; put the game's shape back. */
+const asList = v => Array.isArray(v) ? v.filter(x => x!=null) : (v && typeof v==="object") ? Object.values(v) : [];
+function normState(raw){
+  if (!raw || typeof raw!=="object") return null;
+  const st = Object.assign({}, raw);
+  st.phase = st.phase || "join";
+  ["phaseAt","round","roundNo","openedAt","call","callHigh","pitchAt"].forEach(k => { st[k] = Number(st[k]) || 0; });
+  st.voteRound = Number(st.voteRound) || 1;
+  st.cardId = st.cardId || null;
+  st.lastSale = st.lastSale || null;
+  if (st.lastSale && !st.lastSale.team) st.lastSale = Object.assign({}, st.lastSale, {team:null});
+  st.sold = (st.sold && typeof st.sold==="object") ? st.sold : {};
+  st.unclaimed = asList(st.unclaimed);
+  const s = Object.assign({}, DEFAULTS, st.settings || {});
+  const teams = asList((st.settings||{}).teams);
+  s.teams = DEFAULTS.teams.map((d,i) => teams[i] || d);
+  st.settings = s;
+  return st;
+}
+
+function applyLocal(path, data){
+  const [col,id] = path.split("/");
+  if (col==="state") { store.state = normState(data); store.gotState = true; }
+  else if (col==="bids") { if (data===null) delete store.bids[id]; else store.bids[id]=data; }
+  else if (col==="votes") { if (data===null) delete store.votes[id]; else store.votes[id]=data; }
+}
+function write(path, data){
+  if (store.mode==="practice") { applyLocal(path, data); scheduleRender(); return true; }
+  if (!canSync()) {
+    store.error = store.mode==="live"
+      ? "This screen isn't connected right now, so nothing was sent. Wait for the connection to come back, then tap again."
+      : "Not connected to the live game, so nothing was sent. See the warning above.";
+    scheduleRender(); return false;
+  }
+  // Firebase applies the change on this screen at once and pushes it to every other screen in real time.
+  try {
+    fb.set(fb.ref(fdb, BASE + "/" + path), data).then(() => {
+      if (store.writeFail) { store.writeFail = false; scheduleRender(); }
+    }).catch(e => { onWriteError(e); });
+  } catch(e) { onWriteError(e); return false; }
+  return true;
+}
+function isDenied(e){ return /permission/i.test(String((e && (e.code || e.message)) || "")); }
+function onWriteError(e){
+  store.writeFail = true;
+  if (isDenied(e)) { store.denied = true; store.canWrite = false; store.error = ""; }
+  else store.error = "A change didn't reach the other screens. Check the Wi-Fi and tap again.";
+  scheduleRender();
+}
+
+/* What's wrong with the link, in the room's words. null = all good. */
+function connIssue(){
+  if (store.mode==="connecting") return null;
+  if (store.mode==="offline") return {hard:true, title:"Can't load the live game.",
+    text:"This screen couldn't load Firebase, so it can't sync with the tablets. Check the internet connection and reload. If it keeps happening, the network may be blocking gstatic.com or firebaseio.com."};
+  if (store.mode==="practice") return {hard:false, title:"Practice mode: this screen only.",
+    text:"Nothing here reaches the tablets. Reload the page to connect to the live game."};
+  if (store.denied) return {hard:true, title:"Firebase refused access.",
+    text:"The database rules don't let this game read or write. Paste the rules from the setup notes into Realtime Database › Rules, publish them, then reload."};
+  if (!store.netOnline) return {hard:true, title:"This device is offline.", text:"Reconnect to Wi-Fi. Bidding is paused on this screen until it's back."};
+  if (store.everConnected && !store.connected) return {hard:true, title:"Connection lost. Reconnecting…",
+    text:"Bidding is paused on this screen until the connection is back. Coins and cards are safe in the database."};
+  if (!store.everConnected && store.stalled) return {hard:true, title:"Can't reach the live game.",
+    text:"No reply from Firebase after 10 seconds. Check the Wi-Fi, then reload."};
+  if (store.writeFail) return {hard:false, title:"Last change didn't sync.", text:"Check the Wi-Fi and tap again."};
+  return null;
+}
+
+/* who is connected right now: each screen marks itself present and Firebase removes the mark when it disconnects */
+function setPresence(){
+  if (store.mode!=="live" || !fb || !store.connected || !ui.role || store.denied) return;
+  const path = BASE + "/presence/" + ui.role + "/" + CLIENT_ID;
+  if (presRef && presRef._path === path) { fb.set(presRef.ref, true).catch(() => {}); return; }
+  clearPresence();
+  const r = fb.ref(fdb, path);
+  presRef = {ref:r, _path:path};
+  fb.onDisconnect(r).remove().catch(() => {});
+  fb.set(r, true).catch(() => {});
+}
+function clearPresence(){
+  if (!presRef || !fb) return;
+  const r = presRef.ref; presRef = null;
+  fb.onDisconnect(r).cancel().catch(() => {});
+  fb.remove(r).catch(() => {});
+}
+function ensureJoined(){
+  // mark a team tablet as joined once it can actually reach the game
+  if (!ui.role || ui.role==="host" || !canSync()) return;
+  const cur = store.bids[ui.role];
+  if (!cur) write("bids/"+ui.role, {round:-1, amount:0, at:now(), joined:true});
+  else if (!cur.joined) write("bids/"+ui.role, Object.assign({}, cur, {joined:true}));
+}
+function connectedTeams(){
+  const out = {};
+  for (const t of TEAM_IDS) { const p = store.presence[t]; if (p && typeof p==="object" && Object.keys(p).length) out[t] = Object.keys(p).length; }
+  return out;
+}
+
+async function init(){
+  render();
+  try {
+    const base = "https://www.gstatic.com/firebasejs/" + FIREBASE_VERSION + "/";
+    const [appMod, dbMod] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-database.js")]);
+    const app = appMod.initializeApp(firebaseConfig);
+    fdb = dbMod.getDatabase(app);
+    fb = dbMod;
+  } catch(e) {
+    store.mode = "offline"; store.loadError = String(e && e.message || e); render(); return;
+  }
+  store.mode = "live";
+  const onErr = e => { if (isDenied(e)) store.denied = true; else store.error = "Lost contact with the live game. Reload the page."; scheduleRender(); };
+  setTimeout(() => { if (!store.everConnected) { store.stalled = true; scheduleRender(); } }, 10000);
+  fb.onValue(fb.ref(fdb, ".info/serverTimeOffset"), s => { serverOffset = Number(s.val()) || 0; });
+  fb.onValue(fb.ref(fdb, ".info/connected"), s => {
+    store.connected = s.val() === true;
+    if (store.connected) { store.everConnected = true; store.stalled = false; setPresence(); setTimeout(ensureJoined, 300); }
+    scheduleRender();
+  });
+  fb.onValue(fb.ref(fdb, BASE + "/state"), s => { store.state = normState(s.val()); store.gotState = true; scheduleRender(); }, onErr);
+  fb.onValue(fb.ref(fdb, BASE + "/bids"), s => { store.bids = s.val() || {}; scheduleRender(); }, onErr);
+  fb.onValue(fb.ref(fdb, BASE + "/votes"), s => { store.votes = s.val() || {}; scheduleRender(); }, onErr);
+  fb.onValue(fb.ref(fdb, BASE + "/presence"), s => { store.presence = s.val() || {}; scheduleRender(); }, onErr);
+  render();
+}
+window.addEventListener("online", () => { store.netOnline = true; scheduleRender(); });
+window.addEventListener("offline", () => { store.netOnline = false; scheduleRender(); });
+
+/* ===================== game logic ===================== */
+function leader(){
+  const st = S(); let best = null;
+  for (const t of TEAM_IDS) {
+    const b = store.bids[t];
+    if (!b || b.round!==st.round || !(b.amount>0)) continue;
+    if (b.amount > left(t)) continue;
+    if (!best || b.amount>best.amount || (b.amount===best.amount && (b.at||0)<best.at)) best = {team:t, amount:b.amount, at:b.at||0};
+  }
+  return best;
+}
+function roundBids(){
+  const st = S();
+  return TEAM_IDS.map(t => ({team:t, b:store.bids[t]})).filter(x => x.b && x.b.round===st.round && x.b.amount>0 && x.b.amount<=left(x.team))
+    .sort((a,b) => b.b.amount-a.b.amount || (a.b.at||0)-(b.b.at||0));
+}
+function spent(t){ return Object.values(S().sold).filter(s => s.team===t).reduce((a,s) => a+s.price, 0); }
+function left(t){ return (S().settings.budget||0) - spent(t); }
+function owned(t){ return Object.entries(S().sold).filter(([,s]) => s.team===t).map(([id]) => CARD[id]).filter(Boolean); }
+function colourCount(t){ const o={c:0,r:0,i:0,s:0}; owned(t).forEach(c => o[c.el]++); return o; }
+function hasSet(t){ const o = colourCount(t); return o.c>0 && o.r>0 && o.i>0 && o.s>0; }
+function teamTrust(t){ return trustOf(owned(t).map(c => c.id)); }
+function trustIfWon(t, id){ return trustOf(owned(t).map(c => c.id).concat([id])); }
+function roomTrust(){ const xs = TEAM_IDS.map(t => teamTrust(t).T); return xs.reduce((a,b) => a+b, 0) / xs.length; }
+function started(){ return (S().roundNo||0) > 0; }
+function nextRoundNo(){ return (S().roundNo||0) + 1; }
+function nextLotId(){
+  const st = S();
+  return ORDER.find(id => !st.sold[id] && !st.unclaimed.includes(id) && !(st.phase==="bidding" && id===st.cardId)) || null;
+}
+function remainingLots(){ const st=S(); return ORDER.filter(id => !st.sold[id] && !st.unclaimed.includes(id)); }
+function voteCandidates(){
+  const sold = ORDER.filter(id => S().sold[id]);
+  return sold.length >= 5 ? sold : ORDER.slice();
+}
+function voteTotals(){
+  const st = S(); const tot = {}; let voters = 0;
+  for (const t of TEAM_IDS) {
+    const v = store.votes[t];
+    if (!v || v.voteRound!==st.voteRound) continue;
+    voters += v.voters||0;
+    for (const [id,n] of Object.entries(v.counts||{})) tot[id] = (tot[id]||0)+n;
+  }
+  const list = voteCandidates().map(id => ({id, n: tot[id]||0})).sort((a,b) => b.n-a.n || ORDER.indexOf(a.id)-ORDER.indexOf(b.id));
+  return {list, voters};
+}
+
+/* host actions */
+function hostWrite(mut){ const st = clone(S()); mut(st); write("state", st); }
+function setPhase(p){
+  if (p==="auction") { auctionTab(); return; }
+  hostWrite(st => { st.phase=p; st.phaseAt=now(); st.pitchAt=0; });
+}
+function auctionTab(){
+  const st = S();
+  if (st.phase==="bidding" || st.phase==="sold") return;
+  if (started()) hostWrite(s => { s.phase="sold"; s.phaseAt=now(); });
+  else hostWrite(s => { s.phase="ready"; s.phaseAt=now(); });
+}
+function openLot(id){
+  if (!id) { setPhase("debrief"); return; }
+  hostWrite(st => {
+    st.phase="bidding"; st.round=(st.round||0)+1; st.roundNo=(st.roundNo||0)+1; st.cardId=id; st.openedAt=now(); st.phaseAt=now();
+    st.call=0; st.callHigh=0; st.unclaimed = st.unclaimed.filter(x => x!==id); st.lastSale=null;
+  });
+  ui.drawer=null;
+}
+function callOut(n){ const L=leader(); hostWrite(st => { st.call=n; st.callHigh = L ? L.amount : 0; }); }
+function sell(){
+  const L = leader(); const st0 = S(); if (!st0.cardId) return;
+  if (!L) { noSale(); return; }
+  hostWrite(st => { st.sold[st.cardId] = {team:L.team, price:L.amount}; st.lastSale={cardId:st.cardId, team:L.team, price:L.amount}; st.phase="sold"; st.phaseAt=now(); st.call=0; });
+  sound("gavel");
+}
+function noSale(){
+  hostWrite(st => { if (!st.unclaimed.includes(st.cardId)) st.unclaimed.push(st.cardId); st.lastSale={cardId:st.cardId, team:null, price:0}; st.phase="sold"; st.phaseAt=now(); st.call=0; });
+  sound("thud");
+}
+function undoSale(){
+  hostWrite(st => {
+    const ls = st.lastSale; if (!ls) return;
+    delete st.sold[ls.cardId]; st.unclaimed = st.unclaimed.filter(x => x!==ls.cardId);
+    st.cardId = ls.cardId; st.lastSale=null; st.phase="bidding"; st.call=0; st.callHigh=0; st.phaseAt=now();
+  });
+}
+function placeBid(team, jump){
+  const st = S(); if (st.phase!=="bidding") return;
+  const L = leader(); const step = st.settings.step||50;
+  if (L && L.team===team) return;
+  const amount = L ? L.amount + jump : (st.settings.opening||50) + (jump-step);
+  if (amount > left(team)) return;
+  write("bids/"+team, {round:st.round, amount, at:stamp(), joined:true});
+}
+function resetGame(){
+  const prev = S();
+  write("state", freshState(prev.settings, prev));
+  for (const t of TEAM_IDS) {
+    if (store.bids[t]) write("bids/"+t, {round:-1, amount:0, at:0, joined:!!store.bids[t].joined});
+    if (store.votes[t]) write("votes/"+t, null);
+  }
+  ui.confirm=null; ui.drawer=null;
+}
+
+/* ===================== local UI state ===================== */
+const ui = {
+  role: roleGet(),   // "host" | "t1".."t5" | null
+  drawer:null, confirm:null, hostAsk:false,
+  sound: lsGet("la-sound")!=="off",
+  vote: {sel:[], done:false},
+  lastHigh:0, lastSaleKey:""
+};
+function plan(team){ try { return JSON.parse(lsGet("la-plan-"+GAME+"-"+team)||"{}") || {}; } catch(e){ return {}; } }
+function savePlan(team,p){ lsSet("la-plan-"+GAME+"-"+team, JSON.stringify(p)); }
+
+/* ===================== sound ===================== */
+let actx = null;
+function sound(kind){
+  if (!ui.sound || ui.role!=="host") return;
+  try {
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = "triangle";
+    const f = kind==="gavel" ? 150 : kind==="thud" ? 90 : 660;
+    o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f*0.5, t+0.18);
+    g.gain.setValueAtTime(kind==="bid"?0.08:0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t+(kind==="bid"?0.12:0.35));
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.4);
+    if (kind==="gavel") setTimeout(() => sound("thud"), 170);
+  } catch(e){}
+}
+
+/* ===================== render ===================== */
+let renderQueued = false, renderDeferred = false, lastViewKey = "";
+// a timer, not requestAnimationFrame: background tabs pause animation frames and would miss live updates
+function scheduleRender(){ if (renderQueued) return; renderQueued = true; setTimeout(() => { renderQueued=false; render(); }, 16); }
+function typing(){ const a=document.activeElement; return a && $app.contains(a) && (a.tagName==="INPUT" || a.tagName==="TEXTAREA"); }
+document.addEventListener("focusout", () => { if (renderDeferred) { renderDeferred=false; setTimeout(scheduleRender, 0); } });
+
+function render(){
+  // A new round or stage always reaches every screen, even mid-typing.
+  const st0 = S();
+  const viewKey = (ui.role||"-") + "|" + st0.phase + "|" + (st0.roundNo||0);
+  const stageChanged = viewKey !== lastViewKey;
+  if (typing() && !stageChanged) { renderDeferred = true; return; }
+  if (stageChanged && typing()) document.activeElement.blur();
+  // sound cues for the room
+  const L = leader();
+  if (ui.role==="host" && S().phase==="bidding" && L && L.amount>ui.lastHigh) sound("bid");
+  ui.lastHigh = (S().phase==="bidding" && L) ? L.amount : 0;
+
+  let html;
+  if (store.mode==="connecting") html = `<div class="start"><p class="mono muted">Connecting to the auction room…</p></div>`;
+  else if (!ui.role) html = startView();
+  else if (ui.role==="host") html = hostView();
+  else html = tabletView(ui.role);
+  $app.innerHTML = html;
+  if (stageChanged && lastViewKey && ui.role && ui.role!=="host") { try { window.scrollTo(0,0); } catch(e){} }
+  lastViewKey = viewKey;
+  tick();
+}
+
+function gavelSvg(){ return `<svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><rect x="4" y="5" width="15" height="8" rx="2" transform="rotate(-35 11.5 9)"/><rect x="13.5" y="11" width="3.2" height="17" rx="1.6" transform="rotate(-35 15 19.5)"/><rect x="3" y="26" width="16" height="3" rx="1.5"/></svg>`; }
+
+function connBanner(){
+  const c = connIssue(); if (!c) return "";
+  return `<div class="conn ${c.hard?"":"soft"}" role="${c.hard?"alert":"status"}"><b>${esc(c.title)}</b><span>${esc(c.text)}</span></div>`;
+}
+function errorBar(){
+  let out = connBanner();
+  if (store.error) out += `<div class="notice warn" role="alert">${esc(store.error)} <button class="btn ghost" data-act="clear-error">Dismiss</button></div>`;
+  if (store.mode==="live" && !store.canWrite && !store.denied) out += `<div class="notice warn">You can watch from this screen, but bids and controls need an account that can edit this page.</div>`;
+  return out;
+}
+function liveTablets(){
+  // A tablet counts as connected when it's in the room right now; "joined" alone means it joined at some point.
+  const now = connectedTeams();
+  return TEAM_IDS.map(t => ({team:t, now: !!now[t], joined: !!(store.bids[t] && store.bids[t].joined)}));
+}
+function tabletCount(){
+  const lt = liveTablets();
+  return store.mode==="live" ? lt.filter(x => x.now).length : 0;
+}
+
+/* ---------- scoring pieces ---------- */
+function weightChips(c, withPts){
+  const k = [["c","C"],["r","R"],["i","I"],["s","S−"]];
+  return `<span class="wts" aria-label="Trust ratings: credibility ${c.w.c}, reliability ${c.w.r}, intimacy ${c.w.i}, lowers self-orientation by ${c.w.s}">${k.map(([e,l]) => `<span class="wt wt-${e} ${c.w[e]?"on":""}">${l}${c.w[e]}</span>`).join("")}${withPts?`<span class="wt pts">${c.pts} pts</span>`:""}</span>`;
+}
+function methodHtml(compact){
+  return `<ol class="method">
+    <li>Each card is rated 0–3 on the four elements: <b>3</b> = the element it mainly builds (every card has exactly one), <b>2</b> = a strong secondary effect, <b>1</b> = a clear secondary effect, <b>0</b> = no direct effect. For self-orientation the rating is how much the behaviour <b>lowers</b> it.</li>
+    <li><b>Card trust points</b> = C + R + I + S−. Cards range from 3 to 5 points.</li>
+    <li><b>Team trust score</b> = (C + R + I) ÷ S. Every team starts with S = ${S_START}; each S− point lowers it by 1, down to a floor of ${S_FLOOR}. No cards = 0.</li>
+    ${compact ? "" : `<li>Because S is the divisor, a purple card adds little on its own but raises the value of every other card you own. Buying only purple cards stops paying off once S reaches ${S_FLOOR}, because you still need something on top of the line.</li>
+    <li><b>Room trust score</b> = the average of the five team scores.</li>`}
+  </ol>
+  <div class="formula">Trust = (C + R + I) ÷ S &nbsp;&nbsp;·&nbsp;&nbsp; S = max(${S_FLOOR}, ${S_START} − S−)</div>
+  <div class="caveat">These ratings are HNI's facilitation design for this game, based on our reading of the four trust elements in Maister, Green &amp; Galford (2000). They are not a validated measure of trust. Use them to start the conversation, and challenge any rating you disagree with in the debrief.</div>`;
+}
+function scoringDrawer(){
+  return `<section class="drawer"><div class="row"><b>How scoring works</b><span class="spacer"></span><button class="btn ghost" data-act="cancel">Close</button></div>
+    <div class="grid2"><div style="display:grid;gap:12px">${methodHtml(false)}</div>
+      <div style="display:grid;gap:10px;align-content:start"><p class="mono muted">Worked example</p>
+        ${(() => { const ex = trustOf(["c1","r1","i1","s2"]); return `<p>A team owning Lots ${["c1","r1","i1","s2"].map(lotNo).join(", ")} has C ${ex.c} + R ${ex.r} + I ${ex.i} = ${ex.N} on top. S− totals ${ex.sred}, so S = ${S_START} − ${ex.sred} = ${ex.S}. Trust = ${ex.N} ÷ ${ex.S} = <b>${fmtT(ex.T)}</b>.</p>`; })()}
+        ${(() => { const ex = trustOf(["c1","c2","r1","r3"]); return `<p>Swap the orange and purple cards for two more blue and green ones: ${ex.N} ÷ ${ex.S} = <b>${fmtT(ex.T)}</b>. Same total card points, lower trust, because S stays high.</p>`; })()}
+      </div></div>
+    <div class="tablewrap"><table class="scores"><thead><tr><th>Lot</th><th>Behaviour</th><th>C</th><th>R</th><th>I</th><th>S−</th><th>Pts</th><th>Why this rating</th></tr></thead><tbody>
+      ${ORDER.map(id => { const c = CARD[id]; return `<tr class="el-${c.el}"><td class="num">${lotNo(id)}</td><td>${esc(c.text)}</td>${["c","r","i","s"].map(e => `<td class="n ${c.w[e]?"":"z"}">${c.w[e]}</td>`).join("")}<td class="n">${c.pts}</td><td class="why">${esc(c.why)}</td></tr>`; }).join("")}
+    </tbody></table></div>
+  </section>`;
+}
+function trustBreakdown(tt){ return `(${tt.c} + ${tt.r} + ${tt.i}) ÷ ${tt.S}`; }
+
+/* ---------- start ---------- */
+function startView(){
+  const st = S();
+  const offline = store.mode==="offline";
+  return `<div class="start">
+    <div class="row mono muted">${gavelSvg().replace("<svg","<svg style='width:22px;height:22px;color:var(--brass)'")} HR X Offsite · Chapter 1 <span class="spacer"></span><span title="Add ?game=name to the address for a separate game">Game: ${esc(GAME)}</span></div>
+    <h1>The Leadership Auction</h1>
+    <p class="lede">Five teams, ${fmt(st.settings.budget)} HR X Coins each, twenty principles on the block. Choose what this screen is for.</p>
+    ${errorBar()}
+    ${offline ? `<div class="notice">Rehearsing on your own? <button class="btn" data-act="practice">Practice on this screen only</button> <span class="muted">Nothing will sync to tablets.</span></div>` : ""}
+    <div>
+      <p class="mono muted" style="margin-bottom:10px">Team tablet</p>
+      <div class="choose">${TEAM_IDS.map((t,i) => { const lt = liveTablets()[i]; return `<button class="paddle" data-act="pick" data-team="${t}" ${offline?"disabled":""}><span class="pno">${i+1}</span><b>Team ${esc(teamName(t))}</b><span class="muted" style="font-size:.85rem">${offline ? "Needs the live game" : lt.now ? "A tablet is connected" : lt.joined ? "Joined earlier" : "Tap to join"}</span></button>`; }).join("")}</div>
+    </div>
+    <div class="host-pick">
+      <div><b>Auctioneer screen</b><p class="muted" style="font-size:.92rem">For the projector. It runs the rounds, the gavel and the scoreboard.</p></div>
+      ${ui.hostAsk
+        ? `<div class="row"><span class="muted">This screen will control the game.</span><button class="btn primary" data-act="be-host">Open the console</button><button class="btn ghost" data-act="host-cancel">Cancel</button></div>`
+        : `<button class="btn" data-act="host-ask">I'm the auctioneer</button>`}
+    </div>
+  </div>`;
+}
+
+/* ---------- host ---------- */
+function startButton(huge){
+  const nx = nextLotId(); const ok = canSync() && !!nx && (store.mode!=="live" || store.canWrite);
+  return `<button class="btn start ${huge?"huge":""}" data-act="start-round" ${ok?"":"disabled"}>Start Round ${nextRoundNo()}</button>`;
+}
+function hostView(){
+  const st = S();
+  const phaseKey = (st.phase==="bidding"||st.phase==="sold"||st.phase==="ready") ? "auction" : st.phase;
+  const n = tabletCount();
+  const issue = connIssue();
+  const conn = store.mode==="live"
+    ? `<span class="pill ${issue?(issue.hard?"off":"warn"):""}" title="Team tablets connected right now"><i></i>${issue?(issue.hard?"Not syncing":"Reconnecting"):"Live"} · ${n}/5 tablets</span>`
+    : store.mode==="practice" ? `<span class="pill warn"><i></i>Practice · this screen only</span>`
+    : `<span class="pill off"><i></i>Not connected</span>`;
+  let stage = "";
+  if (store.mode==="offline") stage = `<section class="panel"><h2>The live game isn't available on this screen.</h2><p>This screen couldn't load Firebase. Check the internet connection, then reload.</p><div class="row"><button class="btn" data-act="practice">Practice on this screen only</button></div></section>`;
+  else if (store.mode==="live" && !store.gotState) stage = `<p class="muted">Loading the game…</p>`;
+  else if (store.mode==="live" && !store.state) stage = `<section class="panel"><h2>No game set up yet</h2><p>Create a fresh game to start taking bids.</p><div class="row"><button class="btn primary big" data-act="create">Set up a new game</button></div></section>`;
+  else if (st.phase==="join") stage = hostJoin();
+  else if (st.phase==="rules") stage = hostRules();
+  else if (st.phase==="strategy") stage = hostStrategy();
+  else if (st.phase==="ready") stage = hostReady();
+  else if (st.phase==="bidding") stage = hostBidding();
+  else if (st.phase==="sold") stage = hostSold();
+  else if (st.phase==="debrief") stage = hostDebrief();
+  else if (st.phase==="vote") stage = hostVote();
+  else if (st.phase==="top5") stage = hostTop5();
+  const showScore = ["strategy","ready","bidding","sold"].includes(st.phase);
+  const preStart = !started() && ["join","rules","strategy"].includes(st.phase) && store.mode!=="offline";
+  return `<div class="host">
+    <header class="bar">
+      <div class="brand">${gavelSvg()}<div><h1>Leadership Auction</h1><div class="mono">HR X · Chapter 1</div></div></div>
+      <nav class="phases" aria-label="Game stages">${PHASES.map(([k,l]) => `<button data-act="phase" data-phase="${k}" ${k===phaseKey?'aria-current="step"':""}>${l}</button>`).join("")}</nav>
+      <span class="spacer"></span>
+      <div class="row">${conn}
+        ${preStart ? startButton(false) : started() && ["bidding","sold"].includes(st.phase) ? `<span class="roundtag">Round ${st.roundNo}</span>` : ""}
+        <button class="btn ghost" data-act="scoring">Scoring</button>
+        <button class="btn ghost" data-act="lots">All lots</button>
+        <button class="btn ghost" data-act="sound">${ui.sound?"Sound on":"Sound off"}</button>
+        <button class="btn ghost" data-act="ask-reset">Reset</button>
+        <button class="btn ghost" data-act="switch">Switch screen</button>
+      </div>
+    </header>
+    <main class="stage">
+      <div style="display:grid;gap:12px">
+        ${errorBar()}
+        ${ui.confirm==="reset" ? `<div class="confirm"><b>Start a new game?</b><span>Coins, sales, rounds and votes go back to zero. Team names and settings stay.</span><span class="spacer"></span><button class="btn danger" data-act="reset">Reset the game</button><button class="btn ghost" data-act="cancel">Keep playing</button></div>` : ""}
+        ${ui.drawer==="lots" ? lotsDrawer() : ""}
+        ${ui.drawer==="scoring" ? scoringDrawer() : ""}
+        ${stage}
+      </div>
+    </main>
+    <footer>${showScore && store.mode!=="offline" ? scoreboard() : ""}</footer>
+  </div>`;
+}
+
+function hostJoin(){
+  const st = S(); const s = st.settings; const lt = liveTablets();
+  return `<div class="grid2">
+    <section class="panel">
+      <p class="mono muted">Before we start</p>
+      <h2 class="hero-title">Pick up your paddles.</h2>
+      <p style="font-size:1.1rem">On each team tablet, open this same page and tap your team. Each tablet lights up below while it's connected.</p>
+      <div class="joined">${TEAM_IDS.map((t,i) => { const x = lt[i]; const on = x.now; return `<div class="jt ${on?"on":""}"><span class="mono muted">Paddle ${i+1}</span><b>${esc(teamName(t))}</b><span class="state">${store.mode==="practice" ? "Console bids" : on ? "Connected" : x.joined ? "Not connected now" : "Waiting…"}</span></div>`; }).join("")}</div>
+      <div class="row"><button class="btn primary big" data-act="phase" data-phase="rules">Show the rules</button>${startButton(false)}</div>
+    </section>
+    <section class="panel">
+      <p class="mono muted">Settings</p>
+      <div class="settings">${TEAM_IDS.map((t,i) => `<label class="field" for="tn-${t}">Team ${i+1}<input id="tn-${t}" data-set="team" data-i="${i}" value="${esc(s.teams[i])}" maxlength="24"></label>`).join("")}</div>
+      <div class="settings">
+        <label class="field" for="set-budget">Coins per team<input id="set-budget" type="number" min="100" step="50" data-set="budget" value="${s.budget}"></label>
+        <label class="field" for="set-opening">Opening bid<input id="set-opening" type="number" min="10" step="10" data-set="opening" value="${s.opening}"></label>
+        <label class="field" for="set-step">Bid step<input id="set-step" type="number" min="10" step="10" data-set="step" value="${s.step}"></label>
+        <label class="field" for="set-bonus">Colour-set bonus (IP)<input id="set-bonus" type="number" min="0" step="10" data-set="bonus" value="${s.bonus}"></label>
+        <label class="field" for="set-lot">Seconds per lot<input id="set-lot" type="number" min="15" step="5" data-set="lotSeconds" value="${s.lotSeconds}"></label>
+        <label class="field" for="set-strat">Strategy minutes<input id="set-strat" type="number" min="1" step="1" data-set="strategyMin" value="${s.strategyMin}"></label>
+      </div>
+      <p class="muted" style="font-size:.88rem">Changes save when you leave a field. Change coins only before Round 1 starts.</p>
+    </section>
+  </div>`;
+}
+
+function equationHtml(){
+  return `<div class="equation" aria-label="Trustworthiness equals credibility plus reliability plus intimacy, divided by self-orientation">
+    <span>Trust =</span>
+    <span class="frac"><span><span class="eqc">C</span> + <span class="eqr">R</span> + <span class="eqi">I</span></span><span class="eqs">S</span></span>
+  </div>`;
+}
+function elementTiles(){
+  return `<div class="elements">${["c","r","i","s"].map(k => `<div class="eltile el-${k}"><b>${EL[k].name}</b><span>${EL[k].gloss}</span></div>`).join("")}</div>`;
+}
+function hostRules(){
+  const s = S().settings;
+  return `<div style="display:grid;gap:16px"><div class="grid2">
+    <section class="panel">
+      <p class="mono muted">Anchor model · the Trust Equation</p>
+      ${equationHtml()}
+      ${elementTiles()}
+      <p>The lower the self-orientation, the higher the trust. Purple cards are the ones that lower it.</p>
+      <p class="source">Maister, D. H., Green, C. H., &amp; Galford, R. M. (2000). <i>The Trusted Advisor</i>. Free Press.</p>
+    </section>
+    <section class="panel">
+      <p class="mono muted">House rules</p>
+      <ul class="rules">
+        <li><span class="k num">${fmt(s.budget)}</span><span>HR X Coins per team. Spend them on the principles your HR team will stand for.</span></li>
+        <li><span class="k num">${fmt(s.opening)}</span><span>Opening bid. Each raise is ${fmt(s.step)} coins. Bid from your tablet.</span></li>
+        <li><span class="k num">20</span><span>Rounds, one lot each, about ${s.lotSeconds} seconds per round. The auctioneer starts every round.</span></li>
+        <li><span class="k num">+${fmt(s.bonus)}</span><span>Innovation Points for any team that owns at least one card of every colour.</span></li>
+        <li><span class="k">0</span><span>Bids on a lot? It goes to the Unclaimed board.</span></li>
+      </ul>
+      <div class="row"><button class="btn primary big" data-act="phase" data-phase="strategy">Start ${s.strategyMin}-minute strategy</button></div>
+    </section>
+  </div>
+  <section class="panel">
+    <div class="row"><div><p class="mono muted">How your trust score works</p><h2>Every card carries trust points.</h2></div><span class="spacer"></span><button class="btn" data-act="scoring">See all 20 ratings</button></div>
+    ${methodHtml(true)}
+  </section></div>`;
+}
+
+function catalogue(clickable){
+  const st = S();
+  return `<div class="catalogue">${["c","r","i","s"].map(k => `<div class="col el-${k}"><h3><span>${EL[k].name}</span></h3>${
+    CARDS.filter(c => c.el===k).map(c => {
+      const sold = st.sold[c.id]; const unc = st.unclaimed.includes(c.id); const cur = st.cardId===c.id && st.phase==="bidding";
+      const who = sold ? `Sold to ${esc(teamName(sold.team))} · ${fmt(sold.price)}` : unc ? "Unclaimed" : cur ? "On the block" : "";
+      const tag = clickable ? "button" : "div";
+      const attrs = clickable ? `data-act="open-lot" data-card="${c.id}" ${sold||cur||!canSync()?"disabled":""}` : "";
+      return `<${tag} class="mini el-${k} ${sold?"sold":""} ${unc?"unc":""}" ${attrs}><span class="mono">Lot ${lotNo(c.id)}</span><span>${esc(c.text)}</span>${weightChips(c,true)}${who?`<span class="who">${who}</span>`:""}</${tag}>`;
+    }).join("")}</div>`).join("")}</div>`;
+}
+function lotsDrawer(){
+  return `<section class="drawer"><div class="row"><b>All lots</b><span class="muted">Tap a lot to start the next round with it. Unclaimed lots can go up again.</span><span class="spacer"></span><button class="btn ghost" data-act="cancel">Close</button></div>${catalogue(true)}</section>`;
+}
+
+function hostStrategy(){
+  const st = S(); const end = st.phaseAt + st.settings.strategyMin*60000;
+  return `<section class="panel">
+    <div class="row"><div><p class="mono muted">Strategy</p><h2>Agree what you'll fight for, and what you'll let go.</h2></div><span class="spacer"></span>
+      <div style="text-align:right"><div class="bignum num" style="font-size:clamp(2.6rem,5vw,4.4rem)" data-countdown="${end}">--:--</div><span class="muted">left to plan</span></div></div>
+    <p class="muted">Teams mark the lots they want and a top price on their tablets. Each card shows its trust points, and the tablets show how each win would change the team's trust score.</p>
+    ${catalogue(false)}
+    <div class="row">${startButton(true)}<span class="muted">${tabletCount()} of 5 tablets connected. Every connected tablet jumps to Round 1 when you press it.</span></div>
+  </section>`;
+}
+function hostReady(){
+  const nx = nextLotId();
+  return `<section class="ready">
+    <span class="roundtag">Auction</span>
+    <div class="bignum num">Round ${nextRoundNo()}</div>
+    <p class="leader">${nx ? `Lot ${lotNo(nx)} is next. Teams, paddles ready.` : "All lots are done."}</p>
+    ${nx ? startButton(true) : `<button class="btn primary big" data-act="phase" data-phase="debrief">Go to debrief</button>`}
+    <p class="muted">${tabletCount()} of 5 tablets connected</p>
+  </section>`;
+}
+
+function lotCard(id, extra){
+  const c = CARD[id]; if (!c) return "";
+  return `<article class="lot el-${c.el}"><div class="band"><b>${EL[c.el].name}</b><span class="mono">Lot ${lotNo(id)} of 20</span></div>
+    <div class="face"><p class="text">${esc(c.text)}</p><p class="gloss">${EL[c.el].gloss}</p>
+      <div style="display:grid;gap:6px"><div class="row" style="gap:10px"><span class="mono muted">Trust rating</span>${weightChips(c,true)}</div><p class="why">${esc(c.why)}</p></div>
+      ${extra||""}</div></article>`;
+}
+
+function hostBidding(){
+  const st = S(); const L = leader(); const bids = roundBids();
+  const callShown = st.call && (!L || L.amount <= st.callHigh);
+  const end = st.openedAt + st.settings.lotSeconds*1000;
+  return `<div class="block">
+    ${lotCard(st.cardId)}
+    <section class="bidpanel" aria-live="polite">
+      <div class="row"><span class="roundtag">Round ${st.roundNo}</span><span class="muted">${remainingLots().length - 1} lots after this</span></div>
+      <div><p class="mono muted">${L ? "Current bid" : "Opening bid"}</p>
+        <div class="bignum num">${fmt(L ? L.amount : st.settings.opening)}<small>COINS</small></div>
+        <div class="leader">${L ? `Team ${esc(teamName(L.team))} leads` : `<span class="muted">Waiting for the first paddle</span>`}</div>
+        ${L ? (() => { const a = teamTrust(L.team), b = trustIfWon(L.team, st.cardId); return `<p class="muted num">If they win, their trust score goes from ${fmtT(a.T)} to <b>${fmtT(b.T)}</b></p>`; })() : ""}
+        ${callShown ? `<div class="callout">${st.call===1?"Going once…":"Going twice…"}</div>` : ""}
+      </div>
+      <div class="timer" data-timer-end="${end}" data-timer-len="${st.settings.lotSeconds*1000}"><div class="row"><span class="mono muted">Round clock</span><span class="spacer"></span><b class="num" data-countdown="${end}">--:--</b></div><div class="track"><div class="fill"></div></div></div>
+      <div class="paddles">${bids.length ? bids.map((x,i) => `<div class="p ${i===0?"top":""}"><span>${esc(teamName(x.team))}</span><span class="num">${fmt(x.b.amount)}</span></div>`).join("") : `<p class="muted">No paddles up yet.</p>`}</div>
+      <div class="controls">
+        <button class="btn" data-act="call" data-n="1" ${L?"":"disabled"}>Going once</button>
+        <button class="btn" data-act="call" data-n="2" ${L?"":"disabled"}>Going twice</button>
+        <button class="btn primary big" data-act="sell" ${L?"":"disabled"}>Sold</button>
+        <button class="btn ghost" data-act="nosale">${L?"Withdraw lot":"No bids · Unclaimed"}</button>
+      </div>
+      <div style="display:grid;gap:8px"><button class="btn ghost" data-act="backup" aria-expanded="${!!ui.backupOpen}" style="justify-self:start;font-size:.9rem">${ui.backupOpen?"Hide":"Enter a bid for a team"} (paddle in the room, or a tablet is down)</button>
+        ${ui.backupOpen ? `<div class="backup">${TEAM_IDS.map(t => { const can = !(L && L.team===t) && ((L?L.amount+st.settings.step:st.settings.opening) <= left(t)); return `<button class="btn" data-act="bid-for" data-team="${t}" ${can?"":"disabled"}>${esc(teamName(t))} +${st.settings.step}</button>`; }).join("")}</div>` : ""}
+      </div>
+    </section>
+  </div>`;
+}
+
+function hostSold(){
+  const st = S(); const ls = st.lastSale; const nx = nextLotId(); const rem = remainingLots().length;
+  let body;
+  if (ls && CARD[ls.cardId]) {
+    const c = CARD[ls.cardId];
+    body = `<span class="roundtag">Round ${st.roundNo} result</span>`;
+    body += ls.team
+      ? `<div class="stamp">Sold</div><p class="leader">to Team ${esc(teamName(ls.team))} for <span class="num">${fmt(ls.price)}</span> coins</p><p class="muted num">Their trust score is now <b>${fmtT(teamTrust(ls.team).T)}</b> · ${trustBreakdown(teamTrust(ls.team))}</p>`
+      : `<div class="stamp none">Unclaimed</div><p class="leader muted">Nobody paid for this one. It goes on the Unclaimed board.</p>`;
+    body += `<p class="what el-${c.el}"><span class="mono" style="color:var(--el)">Lot ${lotNo(c.id)} · ${EL[c.el].name} · ${c.pts} pts</span><br>${esc(c.text)}</p>`;
+  } else body = `<p class="mono muted">Auction</p><p class="what">${rem} lots still to go.</p>`;
+  return `<section class="soldcard">${body}
+    <div class="row" style="justify-content:center">
+      ${nx ? startButton(true) : `<button class="btn primary big" data-act="phase" data-phase="debrief">All lots done · Go to debrief</button>`}
+      ${ls ? `<button class="btn ghost" data-act="undo">Undo this result</button>` : ""}
+      ${nx ? `<button class="btn ghost" data-act="phase" data-phase="debrief">End auction early</button>` : ""}
+    </div>
+    <p class="muted" style="font-size:.9rem">${Object.keys(st.sold).length} sold · ${st.unclaimed.length} unclaimed · ${rem} left${nx?` · Round ${nextRoundNo()} puts Lot ${lotNo(nx)} on the block`:""}</p>
+  </section>`;
+}
+
+function scoreboard(){
+  const st = S(); const L = st.phase==="bidding" ? leader() : null;
+  const best = Math.max(...TEAM_IDS.map(t => teamTrust(t).T));
+  return `<div class="score">${TEAM_IDS.map((t,i) => { const cc = colourCount(t); const tt = teamTrust(t); return `<div class="team ${L&&L.team===t?"lead":""}">
+    <div class="row" style="gap:6px"><span class="mono muted">${i+1}</span><span class="tn">${esc(teamName(t))}</span></div>
+    <div class="row" style="gap:6px;align-items:baseline"><span class="coins num">${fmt(left(t))}</span><span class="muted" style="font-size:.8rem">coins left</span></div>
+    <div class="pips">${["c","r","i","s"].map(k => `<span class="pip el-${k} ${cc[k]?"on":""}" title="${EL[k].name}">${cc[k]||""}</span>`).join("")}${hasSet(t)?`<span class="bonus">+${st.settings.bonus} IP</span>`:""}</div>
+    <div class="trustline"><span>Trust ${tt.N?trustBreakdown(tt):""}</span><span class="trust num" ${tt.T>0&&tt.T===best?'style="color:var(--brass)"':""}>${fmtT(tt.T)}</span></div>
+  </div>`; }).join("")}</div>`;
+}
+
+function hostDebrief(){
+  const st = S();
+  const per = {c:0,r:0,i:0,s:0};
+  for (const [id,s] of Object.entries(st.sold)) if (CARD[id]) per[CARD[id].el] += s.price;
+  const total = Object.values(per).reduce((a,b) => a+b, 0);
+  const max = Math.max(1, ...Object.values(per));
+  const ranked = Object.entries(per).sort((a,b) => b[1]-a[1]);
+  const pitchEnd = st.pitchAt ? st.pitchAt + 60000 : 0;
+  const tr = TEAM_IDS.map(t => ({t, tt: teamTrust(t)})).sort((a,b) => b.tt.T-a.tt.T);
+  return `<div style="display:grid;gap:16px">
+    <div class="grid2">
+      <section class="panel">
+        <p class="mono muted">Where the room's money went</p>
+        <div class="bars">${["c","r","i","s"].map(k => `<div class="bar-row el-${k}"><span class="lbl">${EL[k].name}</span><div class="trk"><div class="fil" style="width:${(per[k]/max*100).toFixed(1)}%"></div></div><span class="val num">${fmt(per[k])}</span></div>`).join("")}</div>
+        <p class="muted num">${fmt(total)} coins spent in total${total?` · most on ${EL[ranked[0][0]].name}`+(ranked.filter(r => r[1]===0).length ? `, nothing on ${ranked.filter(r => r[1]===0).map(r => EL[r[0]].name).join(" or ")}` : `, least on ${EL[ranked[3][0]].name}`):""}.</p>
+        <p class="question">Which trust element did this room invest in most? Which did you neglect?</p>
+      </section>
+      <section class="panel">
+        <p class="mono muted">The Unclaimed board · ${st.unclaimed.length + remainingLots().length} lots</p>
+        <div style="display:grid;gap:8px">${[...st.unclaimed, ...remainingLots()].map(id => { const c=CARD[id]; return `<div class="mini el-${c.el} unc"><span class="mono">Lot ${lotNo(id)} · ${EL[c.el].name} · ${c.pts} pts</span><span>${esc(c.text)}</span></div>`; }).join("") || `<p class="muted">Every lot found a buyer.</p>`}</div>
+        <p class="question">Nobody paid for these. Is that what employees experience from us?</p>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="row"><div><p class="mono muted">Trust scores · (C + R + I) ÷ S</p><h2>Who built the most trust?</h2></div><span class="spacer"></span>
+        <div style="text-align:right"><div class="trust num" style="font-size:3rem">${fmtT(roomTrust())}</div><span class="muted">room trust score (average of 5 teams)</span></div></div>
+      <div style="display:grid;gap:8px">${tr.map((x,i) => `<div class="rank-row ${i===0&&x.tt.T>0?"first":""}"><span class="rk">${i+1}</span><span><b>Team ${esc(teamName(x.t))}</b><br><span class="muted num" style="font-size:.9rem">C ${x.tt.c} + R ${x.tt.r} + I ${x.tt.i} = ${x.tt.N} · S = ${S_START} − ${x.tt.sred}${x.tt.floored?` (floor ${S_FLOOR})`:""} = ${x.tt.S} · ${fmt(spent(x.t))} coins spent</span></span><span class="trust num">${fmtT(x.tt.T)}</span></div>`).join("")}</div>
+      <p class="question">Did the team that spent the most build the most trust? What did the purple cards do to the scores?</p>
+      <p class="source">Ratings are HNI's game design, not a validated measure. Which rating would you challenge? <button class="btn ghost" data-act="scoring">Show all ratings</button></p>
+    </section>
+    <section class="panel">
+      <div class="row"><div><p class="mono muted">Team pitches · 1 minute each</p><p>Hold up your cards: which one was most worth the money, and one real HR situation where you'll use it next month.</p></div><span class="spacer"></span>
+        ${pitchEnd ? `<b class="bignum num" style="font-size:2.6rem" data-countdown="${pitchEnd}">1:00</b>` : ""}
+        <button class="btn" data-act="pitch">${pitchEnd?"Restart":"Start"} 1-minute timer</button>
+        <button class="btn primary" data-act="phase" data-phase="vote">Open the dot vote</button></div>
+      <div class="holdings">${TEAM_IDS.map(t => { const cs = owned(t); return `<div class="holding"><div class="row" style="gap:6px"><b>${esc(teamName(t))}</b>${hasSet(t)?`<span class="bonus">+${st.settings.bonus} IP</span>`:""}</div><span class="muted num" style="font-size:.85rem">${fmt(spent(t))} spent · ${fmt(left(t))} left · trust ${fmtT(teamTrust(t).T)}</span>${cs.map(c => `<div class="mini el-${c.el}"><span>${esc(c.text)}</span><span class="who num">${fmt(st.sold[c.id].price)} coins · ${c.pts} pts</span></div>`).join("") || `<span class="muted">No cards</span>`}</div>`; }).join("")}</div>
+    </section>
+  </div>`;
+}
+
+function hostVote(){
+  const {list, voters} = voteTotals();
+  const max = Math.max(1, ...list.map(x => x.n));
+  const per = TEAM_IDS.map(t => { const v = store.votes[t]; return (v && v.voteRound===S().voteRound) ? (v.voters||0) : 0; });
+  return `<section class="panel">
+    <div class="row"><div><p class="mono muted">Dot vote · 3 dots each</p><h2>Which principles matter most?</h2></div><span class="spacer"></span>
+      <div style="text-align:right"><div class="bignum num" style="font-size:3.4rem">${voters}</div><span class="muted">people have voted</span></div></div>
+    <p class="muted">Pass each team tablet from person to person. Everyone picks three cards from the lots that were bought.</p>
+    <div class="row muted" style="font-size:.88rem">${TEAM_IDS.map((t,i) => `<span class="pill">${esc(teamName(t))} · ${per[i]}</span>`).join("")}</div>
+    <div class="tally">${list.map(x => { const c=CARD[x.id]; return `<div class="t el-${c.el}"><span class="txt">${esc(c.text)}</span><span class="dots num">${x.n}</span><div class="trk"><div class="fil" style="width:${(x.n/max*100).toFixed(1)}%"></div></div></div>`; }).join("")}</div>
+    <div class="row"><button class="btn primary big" data-act="phase" data-phase="top5" ${voters?"":"disabled"}>Reveal the Top 5</button><button class="btn ghost" data-act="revote">Clear votes and start again</button></div>
+  </section>`;
+}
+
+function top5List(){
+  const {list} = voteTotals();
+  const top = list.slice(0,5);
+  const tie = list.length>5 && list[5].n===list[4].n && list[4].n>0;
+  return {top, tie};
+}
+function hostTop5(){
+  const {top, tie} = top5List();
+  const tt = trustOf(top.map(x => x.id));
+  return `<section class="panel">
+    <p class="mono muted">Top 5 HR Principles · for the Legacy Wall</p>
+    <h2 class="hero-title">What HR X stands for.</h2>
+    <div class="top5">${top.map((x,i) => { const c=CARD[x.id]; return `<div class="top el-${c.el}" style="animation-delay:${i*0.12}s"><span class="rank">${i+1}</span><span class="t">${esc(c.text)}</span><span class="dots num">${x.n} dots</span></div>`; }).join("")}</div>
+    ${top.length ? `<p class="muted num">As a set, these five score ${trustBreakdown(tt)} = <b>${fmtT(tt.T)}</b> on the trust scale.</p>` : ""}
+    ${tie ? `<p class="notice">There's a tie for fifth place. Settle it with a show of hands.</p>` : ""}
+  </section>`;
+}
+
+/* ---------- tablet ---------- */
+function tabletView(t){
+  const st = S(); const cc = colourCount(t); const tt = teamTrust(t);
+  const head = `<header class="tabhead">
+    <div><div class="mono muted">Paddle ${TEAM_IDS.indexOf(t)+1}${started()?` · Round ${st.roundNo}`:""}</div><div class="tn">Team ${esc(teamName(t))}</div></div>
+    <div class="pips">${["c","r","i","s"].map(k => `<span class="pip el-${k} ${cc[k]?"on":""}" title="${EL[k].name}">${cc[k]||""}</span>`).join("")}${hasSet(t)?`<span class="bonus">+${st.settings.bonus} IP</span>`:""}</div>
+    <div style="text-align:right"><div class="trust num" style="font-size:1.5rem">${fmtT(tt.T)}</div><div class="muted" style="font-size:.8rem">trust score</div></div>
+    <div style="text-align:right"><div class="coins num">${fmt(left(t))}</div><div class="muted" style="font-size:.8rem">coins left</div></div>
+  </header>`;
+  const waitStart = `<div class="status idle">Waiting for the auctioneer to start Round ${nextRoundNo()}. This screen switches on its own.</div>`;
+  let body;
+  if (store.mode==="offline") body = `<div class="status out">This tablet can't bid until it's connected to the live game.</div>`;
+  else if (store.mode==="live" && store.gotState && !store.state) body = `<div class="status idle">Waiting for the auctioneer to open the game.</div>`;
+  else if (st.phase==="join") body = `<div class="status idle">You're in. Waiting for the auctioneer to start.</div>${miniRules()}`;
+  else if (st.phase==="rules") body = `${started()?"":waitStart}${miniRules()}`;
+  else if (st.phase==="strategy") body = `${started()?"":waitStart}${tabletPlan(t)}`;
+  else if (st.phase==="ready") body = `<section class="ready"><span class="roundtag">Get ready</span><div class="bignum num" style="font-size:clamp(3rem,14vw,5rem)">Round ${nextRoundNo()}</div><p class="leader">Paddles up. The auctioneer is about to open the next lot.</p></section>`;
+  else if (st.phase==="bidding") body = tabletBid(t);
+  else if (st.phase==="sold") body = tabletSold(t);
+  else if (st.phase==="debrief") body = tabletDebrief(t);
+  else if (st.phase==="vote") body = tabletVote(t);
+  else if (st.phase==="top5") { const {top} = top5List(); body = `<section class="panel"><p class="mono muted">Top 5 HR Principles</p><div class="top5">${top.map((x,i) => { const c=CARD[x.id]; return `<div class="top el-${c.el}"><span class="rank">${i+1}</span><span class="t" style="font-size:1.15rem">${esc(c.text)}</span><span class="dots num">${x.n}</span></div>`; }).join("")}</div></section>`; }
+  return `<div class="tab">${head}${errorBar()}${body}
+    <div class="foot"><button class="btn ghost" data-act="switch">Change team</button></div></div>`;
+}
+function miniRules(){
+  const s = S().settings;
+  return `<section class="panel"><p class="mono muted">The Trust Equation</p>${equationHtml()}${elementTiles()}
+    <p>Own one card of every colour by the end and your team earns <b>+${s.bonus} Innovation Points</b>.</p>
+    <p class="mono muted">How your trust score works</p>${methodHtml(true)}
+    <p class="source">Maister, Green &amp; Galford (2000), <i>The Trusted Advisor</i>.</p></section>`;
+}
+function tabletPlan(t){
+  const p = plan(t); const st = S();
+  const wants = Object.entries(p).filter(([,v]) => v && v.want);
+  const total = wants.reduce((a,[,v]) => a+(Number(v.max)||0), 0);
+  const cols = new Set(wants.map(([id]) => CARD[id] && CARD[id].el));
+  const proj = trustOf(owned(t).map(c => c.id).concat(wants.map(([id]) => id).filter(id => !st.sold[id])));
+  return `<section class="panel">
+    <div><p class="mono muted">Strategy</p><h2>Plan your spend</h2></div>
+    <p class="muted">Tick the lots you want and set the most you'll pay. Only this tablet sees your plan.</p>
+    <div class="status ${total>st.settings.budget?"out":"idle"}"><span class="num">${fmt(total)}</span> of <span class="num">${fmt(st.settings.budget)}</span> planned · ${cols.size}/4 colours · trust if you win them all <span class="num">${fmtT(proj.T)}</span>${total>st.settings.budget?" · over budget":""}</div>
+    ${["c","r","i","s"].map(k => `<div style="display:grid;gap:6px"><b style="color:var(--${k})">${EL[k].name}</b>${CARDS.filter(c => c.el===k).map(c => { const v = p[c.id]||{}; return `<div class="planrow el-${k}"><button class="chk" data-act="want" data-card="${c.id}" aria-pressed="${!!v.want}" aria-label="Want lot ${lotNo(c.id)}">${v.want?"✓":""}</button><span style="font-size:.95rem;line-height:1.3"><span class="mono muted" style="font-size:.66rem">Lot ${lotNo(c.id)}</span><br>${esc(c.text)}<br>${weightChips(c,true)}</span><input id="max-${c.id}" type="number" inputmode="numeric" min="0" step="${st.settings.step}" placeholder="Max" aria-label="Top price for lot ${lotNo(c.id)}" data-plan="${c.id}" value="${v.max||""}"></div>`; }).join("")}</div>`).join("")}
+  </section>`;
+}
+function tabletBid(t){
+  const st = S(); const L = leader(); const step = st.settings.step; const myLeft = left(t);
+  const p = plan(t)[st.cardId];
+  const base = L ? L.amount : st.settings.opening - step;
+  const jumps = [step, step*2, step*4];
+  const leading = L && L.team===t;
+  const callShown = st.call && (!L || L.amount <= st.callHigh);
+  const blocked = store.mode==="live" && (!store.canWrite || (connIssue() && connIssue().hard));
+  const now = teamTrust(t), ifWon = trustIfWon(t, st.cardId);
+  let status;
+  if (leading) status = `<div class="status lead">You're leading at <span class="num">${fmt(L.amount)}</span></div>`;
+  else if (L) status = `<div class="status out">Team ${esc(teamName(L.team))} leads at <span class="num">${fmt(L.amount)}</span></div>`;
+  else status = `<div class="status idle">No bids yet. Opening bid is <span class="num">${fmt(st.settings.opening)}</span></div>`;
+  return `<div class="row" style="justify-content:space-between"><span class="roundtag">Round ${st.roundNo}</span><span class="muted">Lot ${lotNo(st.cardId)}</span></div>
+    ${lotCard(st.cardId, p && p.want ? `<p class="mono" style="color:var(--brass)">On your list · your top price ${p.max?fmt(p.max):"not set"}</p>` : "")}
+    <div class="delta">If you win this lot, your trust score goes from <span class="num">${fmtT(now.T)}</span> to <span class="trust num">${fmtT(ifWon.T)}</span></div>
+    ${callShown ? `<div class="status out" style="font-size:1.4rem">${st.call===1?"Going once…":"Going twice…"}</div>` : ""}
+    ${status}
+    <div class="bidbtns">${jumps.map((j,i) => { const amt = base + j; const ok = !leading && amt<=myLeft && !blocked;
+      return `<button class="btn ${i===0?"primary":""}" data-act="bid" data-jump="${j}" ${ok?"":"disabled"}><span class="num">Bid ${fmt(amt)}</span><small>${i===0?(L?`+${step}`:"opening bid"):`jump +${fmt(j)}`}</small></button>`; }).join("")}</div>
+    ${blocked ? `<p class="muted" style="text-align:center">Bidding is paused on this tablet until the connection is back.</p>` : ""}
+    ${!leading && base+step>myLeft ? `<p class="muted" style="text-align:center">Not enough coins to raise on this lot.</p>` : ""}`;
+}
+function tabletSold(t){
+  const st = S(); const ls = st.lastSale;
+  if (!ls || !CARD[ls.cardId]) return `<div class="status idle">Waiting for the auctioneer to start Round ${nextRoundNo()}.</div>`;
+  const c = CARD[ls.cardId];
+  const msg = !ls.team ? `<div class="status idle">Round ${st.roundNo}: unclaimed. Nobody bid on this one.</div>`
+    : ls.team===t ? `<div class="status lead">Round ${st.roundNo}: you won it for <span class="num">${fmt(ls.price)}</span> coins. Trust score now <span class="num">${fmtT(teamTrust(t).T)}</span></div>`
+    : `<div class="status idle">Round ${st.roundNo}: sold to Team ${esc(teamName(ls.team))} for <span class="num">${fmt(ls.price)}</span></div>`;
+  return `${msg}${lotCard(c.id)}<p class="muted" style="text-align:center">${nextLotId() ? `Waiting for the auctioneer to start Round ${nextRoundNo()}.` : "That was the last lot."}</p>`;
+}
+function tabletDebrief(t){
+  const st = S(); const cs = owned(t); const tt = teamTrust(t);
+  return `<section class="panel"><p class="mono muted">Your collection</p>
+    <div class="delta">Your trust score: ${trustBreakdown(tt)} = <span class="trust num">${fmtT(tt.T)}</span></div>
+    <div style="display:grid;gap:8px">${cs.map(c => `<div class="mini el-${c.el}"><span>${esc(c.text)}</span>${weightChips(c,true)}<span class="who num">${fmt(st.sold[c.id].price)} coins</span></div>`).join("") || `<p class="muted">Your team didn't buy any cards.</p>`}</div>
+    <p class="question">For your 1-minute pitch: which card was most worth the money, and where will you use it in a real HR situation next month?</p></section>`;
+}
+function tabletVote(t){
+  const st = S(); const cands = voteCandidates(); const need = Math.min(3, cands.length);
+  const v = store.votes[t]; const mine = (v && v.voteRound===st.voteRound) ? (v.voters||0) : 0;
+  if (ui.vote.done) return `<section class="panel" style="text-align:center;justify-items:center"><h2>Thanks, your dots are in.</h2><p class="muted">${mine} ${mine===1?"person has":"people have"} voted on this tablet.</p><button class="btn primary big" data-act="next-voter">Next voter</button></section>`;
+  return `<section class="panel"><div><p class="mono muted">Dot vote</p><h2>Pick the ${need} principles that matter most</h2></div>
+    <p class="muted">${ui.vote.sel.length}/${need} chosen · ${mine} voted on this tablet</p>
+    <div style="display:grid;gap:8px">${cands.map(id => { const c=CARD[id]; const on = ui.vote.sel.includes(id); return `<button class="votecard el-${c.el}" data-act="pick-vote" data-card="${id}" aria-pressed="${on}"><span class="dot"></span><span>${esc(c.text)}</span></button>`; }).join("")}</div>
+    <button class="btn primary big" data-act="cast" ${ui.vote.sel.length===need?"":"disabled"}>Cast my ${need} dots</button></section>`;
+}
+function castVote(t){
+  const st = S(); const v = store.votes[t];
+  const same = v && v.voteRound===st.voteRound;
+  const counts = same ? Object.assign({}, v.counts||{}) : {};
+  ui.vote.sel.forEach(id => { counts[id] = (counts[id]||0)+1; });
+  if (write("votes/"+t, {voteRound:st.voteRound, counts, voters:(same?(v.voters||0):0)+1})) ui.vote = {sel:[], done:true};
+}
+
+/* ===================== timers (display only) ===================== */
+function tick(){
+  const tnow = now();
+  document.querySelectorAll("[data-countdown]").forEach(el => {
+    const ms = Number(el.dataset.countdown) - tnow; const s = Math.max(0, Math.ceil(ms/1000));
+    el.textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+    el.style.color = ms<=0 ? "var(--alert)" : "";
+  });
+  document.querySelectorAll("[data-timer-end]").forEach(el => {
+    const len = Number(el.dataset.timerLen); const ms = Number(el.dataset.timerEnd) - tnow;
+    const f = el.querySelector(".fill"); if (f) f.style.width = Math.max(0, Math.min(100, ms/len*100)) + "%";
+    el.classList.toggle("over", ms<=0);
+  });
+}
+setInterval(tick, 250);
+
+/* ===================== events ===================== */
+$app.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  const team = ui.role && ui.role!=="host" ? ui.role : null;
+  switch (a) {
+    case "pick": {
+      ui.role = b.dataset.team; roleSet(ui.role); ui.vote={sel:[],done:false};
+      ensureJoined(); setPresence(); wake(); break;
+    }
+    case "host-ask": ui.hostAsk = true; break;
+    case "host-cancel": ui.hostAsk = false; break;
+    case "be-host":
+      ui.role = "host"; roleSet("host"); ui.hostAsk=false;
+      if (store.mode==="live" && store.gotState && !store.state) write("state", freshState(DEFAULTS));
+      setPresence(); wake(); break;
+    case "create": write("state", freshState(DEFAULTS)); break;
+    case "backup": ui.backupOpen = !ui.backupOpen; break;
+    case "switch": ui.role = null; roleSet(null); ui.drawer=null; ui.confirm=null;
+      clearPresence(); break;
+    case "practice": store.mode = "practice"; store.state = freshState(DEFAULTS); store.gotState = true; store.error = ""; break;
+    case "scoring": ui.drawer = ui.drawer==="scoring" ? null : "scoring"; break;
+    case "start-round": openLot(nextLotId()); break;
+    case "clear-error": store.error = ""; break;
+    case "phase": setPhase(b.dataset.phase); break;
+    case "next-lot": openLot(nextLotId()); break;
+    case "open-lot": openLot(b.dataset.card); break;
+    case "lots": ui.drawer = ui.drawer==="lots" ? null : "lots"; break;
+    case "cancel": ui.drawer=null; ui.confirm=null; break;
+    case "ask-reset": ui.confirm = "reset"; break;
+    case "reset": resetGame(); break;
+    case "sound": ui.sound = !ui.sound; lsSet("la-sound", ui.sound?"on":"off"); break;
+    case "call": callOut(Number(b.dataset.n)); break;
+    case "sell": sell(); break;
+    case "nosale": noSale(); break;
+    case "undo": undoSale(); break;
+    case "bid-for": placeBid(b.dataset.team, S().settings.step); break;
+    case "pitch": hostWrite(st => { st.pitchAt = now(); }); break;
+    case "revote": hostWrite(st => { st.voteRound = (st.voteRound||1)+1; }); break;
+    case "bid": if (team) placeBid(team, Number(b.dataset.jump)); break;
+    case "want": if (team) { const p = plan(team); const id=b.dataset.card; p[id] = Object.assign({}, p[id], {want: !(p[id]&&p[id].want)}); savePlan(team,p); } break;
+    case "pick-vote": {
+      const id = b.dataset.card; const need = Math.min(3, voteCandidates().length);
+      const i = ui.vote.sel.indexOf(id);
+      if (i>=0) ui.vote.sel.splice(i,1); else if (ui.vote.sel.length<need) ui.vote.sel.push(id);
+      break;
+    }
+    case "cast": if (team) castVote(team); break;
+    case "next-voter": ui.vote = {sel:[], done:false}; break;
+  }
+  scheduleRender();
+});
+$app.addEventListener("change", e => {
+  const el = e.target;
+  if (el.dataset.set) {
+    const key = el.dataset.set;
+    hostWrite(st => {
+      if (key==="team") { const name = el.value.trim(); if (name) st.settings.teams[Number(el.dataset.i)] = name; }
+      else { const n = Math.round(Number(el.value)); if (n>0) st.settings[key] = n; }
+    });
+  } else if (el.dataset.plan && ui.role && ui.role!=="host") {
+    const p = plan(ui.role); const id = el.dataset.plan; const n = Math.max(0, Math.round(Number(el.value)||0));
+    p[id] = Object.assign({}, p[id], {max:n, want: n>0 ? true : !!(p[id]&&p[id].want)}); savePlan(ui.role, p);
+  }
+});
+
+/* keep tablets and the projector awake */
+let lock = null;
+async function wake(){ try { if (navigator.wakeLock && !lock) { lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock=null; }); } } catch(e){} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState==="visible" && ui.role) wake(); });
+
+// a tablet whose game was reset starts a fresh vote screen
+let lastVoteRound = null;
+const _render = render;
+render = function(){ const vr = S().voteRound; if (lastVoteRound!==null && vr!==lastVoteRound) ui.vote={sel:[],done:false}; lastVoteRound = vr; _render(); };
+
+init();
+})();
+</script>
+
+</body>
+</html>
