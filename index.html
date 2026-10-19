@@ -178,7 +178,7 @@ table.scores tr td:first-child{border-left:5px solid var(--el)}
 
 /* join */
 .joinurl{font-size:1.5em;font-weight:800;word-break:break-all;color:var(--primary)}
-.slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.7em}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(9em,1fr));gap:.7em}
 .slot{border:1.5px dashed var(--line-2);border-radius:var(--rad);padding:.9em;display:grid;gap:.25em;background:var(--surface)}
 .slot.on{border-style:solid;border-color:var(--ok);background:var(--ok-soft)}
 .slot .st{font-size:.85em;font-weight:700;color:var(--ink-3);display:flex;gap:.4em;align-items:center}
@@ -194,6 +194,13 @@ details.settings .inner{padding:0 1.1em 1.1em;display:grid;gap:.9em}
 .field input{font:inherit;font-size:1rem;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--rad-sm);padding:.5em .65em;min-height:44px;width:100%}
 .field input:disabled{background:var(--sunk);color:var(--ink-3)}
 
+.joinbox{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1.2em;align-items:center}
+.qr{display:block;width:12em;height:12em;max-width:100%;border-radius:var(--rad-sm);border:1px solid var(--line);background:#fff}
+.teamfields{grid-template-columns:repeat(auto-fit,minmax(13em,1fr))}
+.teamfield .cb-row{display:flex;gap:.4em}
+.teamfield input{flex:1 1 0;min-width:0}
+.xbtn{min-height:44px;min-width:44px;padding:0;font-size:1.2em;line-height:1}
+@media (max-width:560px){ .joinbox{grid-template-columns:minmax(0,1fr)} .qr{width:100%;height:auto;max-width:16em} }
 /* rules */
 .rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7em}
 .rule{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:1em;display:grid;grid-template-columns:auto 1fr;gap:.2em .9em;align-items:start}
@@ -236,7 +243,7 @@ button.mini:disabled{cursor:not-allowed}
 .history{display:grid;gap:.35em;margin:0;padding:0;list-style:none}
 .history li{display:flex;justify-content:space-between;gap:1em;padding:.45em .7em;border-radius:var(--rad-sm);background:var(--sunk);font-weight:600}
 .history li:first-child{background:var(--accent-soft);color:var(--accent-ink);font-weight:800}
-.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6em}
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(9em,1fr));gap:.6em}
 .team{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:.55em .8em;display:grid;gap:.25em;min-width:0}
 .team.lead{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
 .team .tn{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -284,7 +291,7 @@ button.mini:disabled{cursor:not-allowed}
 details.how{border:1px solid var(--line);border-radius:var(--rad);background:var(--surface)}
 details.how>summary{cursor:pointer;padding:.8em 1em;font-weight:700;min-height:44px;display:flex;align-items:center}
 details.how .inner{padding:0 1em 1em;display:grid;gap:.8em}
-.holdings{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.7em}
+.holdings{display:grid;grid-template-columns:repeat(auto-fit,minmax(11em,1fr));gap:.7em}
 .holding{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:.8em;display:grid;gap:.45em;align-content:start;min-width:0}
 
 /* vote + top 5 */
@@ -481,9 +488,14 @@ const fmtS = x => String(Math.round(x*100)/100);   // S shown with up to 2 decim
 const ORDER = [];
 for (let n=1;n<=5;n++) for (const e of ["c","r","i","s"]) ORDER.push(e+n);
 const lotNo = id => String(ORDER.indexOf(id)+1).padStart(2,"0");
-const TEAM_IDS = ["t1","t2","t3","t4","t5"];
-const DEFAULTS = {budget:1000, opening:50, step:50, bonus:100, lotSeconds:60, strategyMin:5,
+const DEFAULTS = {budget:1000, opening:50, step:50, bonus:100, lotSeconds:60, strategyMin:5, joinLink:"",
   teams:["Wisdom","Collaboration","Innovation","Sustainability","Humanity"]};
+const MIN_TEAMS = 2, MAX_TEAMS = 10;
+const SPARE_NAMES = ["Wisdom","Collaboration","Innovation","Sustainability","Humanity","Integrity","Courage","Curiosity","Respect","Agility"];
+// Team ids are always t1, t2, … in the order of settings.teams.
+function teamIds(){ return S().settings.teams.map((_, i) => "t" + (i+1)); }
+const teamIndex = t => Number(String(t).slice(1)) - 1;
+const NUM_WORDS = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten"];
 const PHASES = [["join","Join"],["rules","Rules"],["strategy","Strategy"],["auction","Auction"],["debrief","Debrief"],["vote","Dot vote"],["top5","Top 5"]];
 
 function freshState(settings, prev){
@@ -505,6 +517,103 @@ const lsSet = (k,v) => { try { v===null ? localStorage.removeItem(k) : localStor
 const roleKey = () => "la-role-" + (new URLSearchParams(location.search).get("game") || "hrx-offsite");
 const roleGet = () => { try { return sessionStorage.getItem(roleKey()); } catch(e){ return null; } };
 const roleSet = v => { try { v===null ? sessionStorage.removeItem(roleKey()) : sessionStorage.setItem(roleKey(), v); } catch(e){} };
+
+/* ===================== QR code (local, no network) =====================
+   Byte-mode QR encoder, error correction level M (falls back to L for long links), versions 1-20.
+   Follows ISO/IEC 18004; structure after Project Nayuki's public-domain reference design. */
+const QR = (() => {
+  const ECC = { M:[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26], L:[-1,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28] };
+  const BLK = { M:[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16], L:[-1,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8] };
+  const FMT = { L:1, M:0 };
+  const rawModules = v => { let r = (16*v + 128)*v + 64; if (v >= 2) { const n = Math.floor(v/7) + 2; r -= (25*n - 10)*n - 55; if (v >= 7) r -= 36; } return r; };
+  const dataCodewords = (v, e) => Math.floor(rawModules(v)/8) - ECC[e][v]*BLK[e][v];
+  const gmul = (x, y) => { let z = 0; for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; } return z & 0xFF; };
+  function rsDivisor(deg){ const r = new Array(deg).fill(0); r[deg-1] = 1; let root = 1;
+    for (let i = 0; i < deg; i++) { for (let j = 0; j < deg; j++) { r[j] = gmul(r[j], root); if (j+1 < deg) r[j] ^= r[j+1]; } root = gmul(root, 2); } return r; }
+  function rsRemainder(data, div){ const r = div.map(() => 0);
+    for (const b of data) { const f = b ^ r.shift(); r.push(0); div.forEach((d, i) => { r[i] ^= gmul(d, f); }); } return r; }
+  function encode(text){
+    const bytes = Array.from(new TextEncoder().encode(String(text)));
+    let ver = 0, ecl = "M";
+    for (const e of ["M","L"]) { for (let v = 1; v <= 20; v++) { const need = 4 + (v <= 9 ? 8 : 16) + bytes.length*8; if (need <= dataCodewords(v, e)*8) { ver = v; ecl = e; break; } } if (ver) break; }
+    if (!ver) return null;   // too long for a version-20 code
+    // data bits
+    const bits = []; const put = (val, n) => { for (let i = n-1; i >= 0; i--) bits.push((val >>> i) & 1); };
+    put(4, 4); put(bytes.length, ver <= 9 ? 8 : 16); bytes.forEach(b => put(b, 8));
+    const cap = dataCodewords(ver, ecl)*8;
+    put(0, Math.min(4, cap - bits.length)); put(0, (8 - bits.length % 8) % 8);
+    for (let p = 0xEC; bits.length < cap; p ^= 0xEC ^ 0x11) put(p, 8);
+    const data = []; for (let i = 0; i < bits.length; i += 8) { let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i+j]; data.push(b); }
+    // error correction + interleave
+    const nb = BLK[ecl][ver], el = ECC[ecl][ver], raw = Math.floor(rawModules(ver)/8);
+    const nShort = nb - raw % nb, shortLen = Math.floor(raw/nb), div = rsDivisor(el);
+    const blocks = []; for (let i = 0, k = 0; i < nb; i++) {
+      const d = data.slice(k, k + shortLen - el + (i < nShort ? 0 : 1)); k += d.length;
+      const ecc = rsRemainder(d, div); if (i < nShort) d.push(0); blocks.push(d.concat(ecc)); }
+    const cw = []; for (let i = 0; i < blocks[0].length; i++) blocks.forEach((b, j) => { if (i !== shortLen - el || j >= nShort) cw.push(b[i]); });
+    // matrix
+    const size = ver*4 + 17;
+    const mod = Array.from({length:size}, () => new Array(size).fill(false));
+    const fn = Array.from({length:size}, () => new Array(size).fill(false));
+    const setF = (x, y, dark) => { mod[y][x] = dark; fn[y][x] = true; };
+    for (let i = 0; i < size; i++) { setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+    const finder = (cx, cy) => { for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const d = Math.max(Math.abs(dx), Math.abs(dy)), x = cx+dx, y = cy+dy; if (x >= 0 && x < size && y >= 0 && y < size) setF(x, y, d !== 2 && d !== 4); } };
+    finder(3, 3); finder(size-4, 3); finder(3, size-4);
+    if (ver > 1) {
+      const n = Math.floor(ver/7) + 2, step = Math.ceil((ver*4 + 4)/(n*2 - 2))*2, pos = [6];
+      for (let p = size - 7; pos.length < n; p -= step) pos.splice(1, 0, p);
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        if ((i === 0 && j === 0) || (i === 0 && j === n-1) || (i === n-1 && j === 0)) continue;
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) setF(pos[i]+dx, pos[j]+dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+      }
+    }
+    const bit = (x, i) => ((x >>> i) & 1) !== 0;
+    const drawFormat = mask => {
+      const d = FMT[ecl] << 3 | mask; let r = d; for (let i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+      const b = (d << 10 | r) ^ 0x5412;
+      for (let i = 0; i <= 5; i++) setF(8, i, bit(b, i));
+      setF(8, 7, bit(b, 6)); setF(8, 8, bit(b, 7)); setF(7, 8, bit(b, 8));
+      for (let i = 9; i < 15; i++) setF(14 - i, 8, bit(b, i));
+      for (let i = 0; i < 8; i++) setF(size - 1 - i, 8, bit(b, i));
+      for (let i = 8; i < 15; i++) setF(8, size - 15 + i, bit(b, i));
+      setF(8, size - 8, true);
+    };
+    drawFormat(0);
+    if (ver >= 7) { let r = ver; for (let i = 0; i < 12; i++) r = (r << 1) ^ ((r >>> 11) * 0x1F25); const b = ver << 12 | r;
+      for (let i = 0; i < 18; i++) { const a = size - 11 + i % 3, c = Math.floor(i/3); setF(a, c, bit(b, i)); setF(c, a, bit(b, i)); } }
+    // place data, upward/downward in two-column strips
+    let i = 0;
+    for (let right = size - 1; right >= 1; right -= 2) { if (right === 6) right = 5;
+      for (let v = 0; v < size; v++) for (let j = 0; j < 2; j++) {
+        const x = right - j, up = ((right + 1) & 2) === 0, y = up ? size - 1 - v : v;
+        if (!fn[y][x] && i < cw.length*8) { mod[y][x] = bit(cw[i >>> 3], 7 - (i & 7)); i++; }
+      } }
+    const masks = [(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,
+      (x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+    const applyMask = m => { for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fn[y][x] && masks[m](x, y)) mod[y][x] = !mod[y][x]; };
+    const penalty = () => {   // rules 1, 2 and 4 of the standard (enough to avoid hard-to-scan masks)
+      let p = 0, dark = 0;
+      for (let a = 0; a < size; a++) { let rr = 1, rc = 1;
+        for (let b = 1; b < size; b++) {
+          if (mod[a][b] === mod[a][b-1]) { rr++; if (rr === 5) p += 3; else if (rr > 5) p++; } else rr = 1;
+          if (mod[b][a] === mod[b-1][a]) { rc++; if (rc === 5) p += 3; else if (rc > 5) p++; } else rc = 1; } }
+      for (let y = 0; y < size - 1; y++) for (let x = 0; x < size - 1; x++) { const c = mod[y][x]; if (c === mod[y][x+1] && c === mod[y+1][x] && c === mod[y+1][x+1]) p += 3; }
+      mod.forEach(r => r.forEach(c => { if (c) dark++; }));
+      return p + (Math.ceil(Math.abs(dark*20 - size*size*10) / (size*size)) - 1) * 10;
+    };
+    let best = 0, bestP = Infinity;
+    for (let m = 0; m < 8; m++) { applyMask(m); drawFormat(m); const p = penalty(); if (p < bestP) { bestP = p; best = m; } applyMask(m); }
+    applyMask(best); drawFormat(best);
+    return {size, mod, ver, ecl, mask:best};
+  }
+  function svg(text, label){
+    const q = encode(text); if (!q) return "";
+    const pad = 4, n = q.size + pad*2; let d = "";
+    q.mod.forEach((row, y) => row.forEach((on, x) => { if (on) d += `M${x+pad} ${y+pad}h1v1h-1z`; }));
+    return `<svg class="qr" viewBox="0 0 ${n} ${n}" role="img" aria-label="${label || "QR code"}" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#0E1A2B"/></svg>`;
+  }
+  return {encode, svg};
+})();
 
 /* ===================== Firebase connection ===================== */
 // Your Firebase project. Web API keys are not secret; the database rules decide who can read and write.
@@ -533,7 +642,7 @@ function now(){ return Date.now() + serverOffset; }   // server-aligned clock, s
 function stamp(){ return (store.mode==="live" && fb) ? fb.serverTimestamp() : now(); }
 
 function S(){ return store.state || freshState(DEFAULTS); }
-function teamName(t){ const st=S(); return (st.settings.teams||DEFAULTS.teams)[TEAM_IDS.indexOf(t)] || t; }
+function teamName(t){ const st=S(); return (st.settings.teams||DEFAULTS.teams)[teamIndex(t)] || t; }
 function canSync(){ return store.mode==="practice" || (store.mode==="live" && store.connected && !store.denied); }
 
 /* Firebase drops empty arrays, empty objects and nulls; put the game's shape back. */
@@ -550,8 +659,12 @@ function normState(raw){
   st.sold = (st.sold && typeof st.sold==="object") ? st.sold : {};
   st.unclaimed = asList(st.unclaimed);
   const s = Object.assign({}, DEFAULTS, st.settings || {});
-  const teams = asList((st.settings||{}).teams);
-  s.teams = DEFAULTS.teams.map((d,i) => teams[i] || d);
+  // keep the stored number of teams (2-10); games saved before teams were editable have 5
+  let teams = asList((st.settings||{}).teams).slice(0, MAX_TEAMS);
+  if (!teams.length) teams = DEFAULTS.teams.slice();
+  while (teams.length < MIN_TEAMS) teams.push(SPARE_NAMES[teams.length]);
+  s.teams = teams.map((n, i) => (typeof n==="string" && n.trim()) ? n : (SPARE_NAMES[i] || "Team " + (i+1)));
+  s.joinLink = typeof s.joinLink==="string" ? s.joinLink : "";
   st.settings = s;
   return st;
 }
@@ -639,7 +752,7 @@ function ensureJoined(){
 }
 function connectedTeams(){
   const out = {};
-  for (const t of TEAM_IDS) { const p = store.presence[t]; if (p && typeof p==="object" && Object.keys(p).length) out[t] = Object.keys(p).length; }
+  for (const t of teamIds()) { const p = store.presence[t]; if (p && typeof p==="object" && Object.keys(p).length) out[t] = Object.keys(p).length; }
   return out;
 }
 
@@ -675,7 +788,7 @@ window.addEventListener("offline", () => { store.netOnline = false; scheduleRend
 /* ===================== game logic ===================== */
 function leader(){
   const st = S(); let best = null;
-  for (const t of TEAM_IDS) {
+  for (const t of teamIds()) {
     const b = store.bids[t];
     if (!b || b.round!==st.round || !(b.amount>0)) continue;
     if (b.amount > left(t)) continue;
@@ -685,7 +798,7 @@ function leader(){
 }
 function roundBids(){
   const st = S();
-  return TEAM_IDS.map(t => ({team:t, b:store.bids[t]})).filter(x => x.b && x.b.round===st.round && x.b.amount>0 && x.b.amount<=left(x.team))
+  return teamIds().map(t => ({team:t, b:store.bids[t]})).filter(x => x.b && x.b.round===st.round && x.b.amount>0 && x.b.amount<=left(x.team))
     .sort((a,b) => b.b.amount-a.b.amount || (a.b.at||0)-(b.b.at||0));
 }
 function spent(t){ return Object.values(S().sold).filter(s => s.team===t).reduce((a,s) => a+s.price, 0); }
@@ -695,7 +808,7 @@ function colourCount(t){ const o={c:0,r:0,i:0,s:0}; owned(t).forEach(c => o[c.el
 function hasSet(t){ const o = colourCount(t); return o.c>0 && o.r>0 && o.i>0 && o.s>0; }
 function teamTrust(t){ return trustOf(owned(t).map(c => c.id)); }
 function trustIfWon(t, id){ return trustOf(owned(t).map(c => c.id).concat([id])); }
-function roomTrust(){ const xs = TEAM_IDS.map(t => teamTrust(t).T).sort((a,b) => a-b); const m = Math.floor(xs.length/2); return xs.length % 2 ? xs[m] : (xs[m-1] + xs[m]) / 2; }
+function roomTrust(){ const xs = teamIds().map(t => teamTrust(t).T).sort((a,b) => a-b); const m = Math.floor(xs.length/2); return xs.length % 2 ? xs[m] : (xs[m-1] + xs[m]) / 2; }
 function started(){ return (S().roundNo||0) > 0; }
 function nextRoundNo(){ return (S().roundNo||0) + 1; }
 function nextLotId(){
@@ -709,7 +822,7 @@ function voteCandidates(){
 }
 function voteTotals(){
   const st = S(); const tot = {}; let voters = 0;
-  for (const t of TEAM_IDS) {
+  for (const t of teamIds()) {
     const v = store.votes[t];
     if (!v || v.voteRound!==st.voteRound) continue;
     voters += v.voters||0;
@@ -773,8 +886,27 @@ function resetGame(){
   // one atomic write: either everything resets or nothing does
   const prev = S();
   const updates = {state: freshState(prev.settings, prev), votes: null};
-  for (const t of TEAM_IDS) if (store.bids[t]) updates["bids/"+t] = {round:-1, amount:0, at:0, joined:!!store.bids[t].joined};
+  for (const t of teamIds()) if (store.bids[t]) updates["bids/"+t] = {round:-1, amount:0, at:0, joined:!!store.bids[t].joined};
   ui.drawer = null;
+  return commit(updates);
+}
+function addTeam(){
+  const st0 = S(); if (started() || st0.settings.teams.length >= MAX_TEAMS) return;
+  const used = new Set(st0.settings.teams);
+  const name = SPARE_NAMES.find(n => !used.has(n)) || "Team " + (st0.settings.teams.length + 1);
+  hostWrite(st => { st.settings.teams.push(name); });
+}
+function removeTeam(i){
+  // one atomic commit: new team list, and every later team's bids/votes move down one id so ids stay t1, t2, … in order
+  const st0 = S(); const n = st0.settings.teams.length;
+  if (started() || n <= MIN_TEAMS || i < 0 || i >= n) return Promise.resolve(false);
+  const st = clone(st0); st.settings.teams.splice(i, 1);
+  const updates = {state: st};
+  for (let k = i + 1; k <= n; k++) {
+    const from = "t" + (k + 1), to = "t" + k;
+    updates["bids/" + to] = k < n ? (store.bids[from] || null) : null;
+    updates["votes/" + to] = k < n ? (store.votes[from] || null) : null;
+  }
   return commit(updates);
 }
 function castVote(t, sel){
@@ -848,9 +980,23 @@ function scheduleRender(){ if (renderQueued) return; renderQueued = true; setTim
 function typing(){ const a=document.activeElement; return a && $app.contains(a) && (a.tagName==="INPUT" || a.tagName==="TEXTAREA"); }
 document.addEventListener("focusout", () => { if (renderDeferred) { renderDeferred=false; setTimeout(scheduleRender, 0); } });
 
-let lastVoteRound = null;
+let lastVoteRound = null, lastTeams = null;
+function followTeamList(teams){
+  // A removed team shifts later ids down by one. Keep each tablet on its own team (or send it back to the list).
+  if (lastTeams && ui.role && ui.role!=="host" && JSON.stringify(lastTeams)!==JSON.stringify(teams)) {
+    const k = teamIndex(ui.role);
+    if (teams.length < lastTeams.length) {
+      let r = lastTeams.findIndex((nm, i) => nm !== teams[i]); if (r < 0) r = lastTeams.length - 1;
+      if (k === r) { leaveRole(); toast("err", "Your team was removed. Pick your team again."); }
+      else if (k > r) { ui.role = "t" + k; roleSet(ui.role); setPresence(); }
+    }
+  }
+  if (ui.role && ui.role!=="host" && teamIndex(ui.role) >= teams.length) leaveRole();
+  lastTeams = teams.slice();
+}
 function render(){
   const st0 = S();
+  if (store.state) followTeamList(st0.settings.teams);
   if (lastVoteRound!==null && st0.voteRound!==lastVoteRound) ui.vote = {sel:[], done:false, sending:false, error:""};
   lastVoteRound = st0.voteRound;
   if (ui.bid && ui.bid.round!==st0.round) ui.bid = null;
@@ -905,9 +1051,15 @@ function banners(){
 }
 function liveTablets(){
   const now = connectedTeams();
-  return TEAM_IDS.map(t => ({team:t, now: !!now[t], joined: !!(store.bids[t] && store.bids[t].joined)}));
+  return teamIds().map(t => ({team:t, now: !!now[t], joined: !!(store.bids[t] && store.bids[t].joined)}));
 }
 function tabletCount(){ return store.mode==="live" ? liveTablets().filter(x => x.now).length : 0; }
+function joinLinkText(){ const j = (S().settings.joinLink || "").trim(); return j || joinAddress(); }
+function joinLinkUrl(){   // what the QR code opens: the custom link (https:// added if missing) or this page's own address
+  const j = (S().settings.joinLink || "").trim();
+  if (j) return /^[a-z][a-z0-9+.-]*:/i.test(j) ? j : "https://" + j;
+  return location.origin + location.pathname.replace(/index\.html$/,"") + (GAME!=="hrx-offsite" ? "?game="+GAME : "");
+}
 function joinAddress(){ return (location.host + location.pathname).replace(/index\.html$/,"") + (GAME!=="hrx-offsite" ? "?game="+GAME : ""); }
 
 /* ---------- shared pieces ---------- */
@@ -988,12 +1140,12 @@ function startView(){
   return `<main class="start">
     <div class="row"><div class="brand">${gavelSvg()} HR X Offsite</div><span class="spacer"></span><span class="pill"><span class="dot ${connState().cls}"></span>${esc(connState().text)}</span></div>
     <div class="stack" style="gap:.6em"><h1>The Leadership Auction</h1>
-      <p class="lede">Five teams. ${fmt(st.settings.budget)} coins each. Twenty HR principles up for auction. Buy the ones your team believes in.</p></div>
+      <p class="lede">${NUM_WORDS[teamIds().length] || teamIds().length} teams. ${fmt(st.settings.budget)} coins each. Twenty HR principles up for auction. Buy the ones your team believes in.</p></div>
     ${banners()}
     ${offline ? `<div class="notice info"><span>Rehearsing on your own?</span><button class="btn" data-act="practice">Practice on this screen only</button></div>` : ""}
     <section class="stack" aria-labelledby="pickh">
       <h2 id="pickh" style="font-size:1.25rem">Tap your team to join</h2>
-      <div class="teams">${TEAM_IDS.map((t,i) => { const x = lt[i]; return `<button class="teambtn" data-act="pick" data-team="${t}" ${offline?"disabled":""}>
+      <div class="teams">${teamIds().map((t,i) => { const x = lt[i]; return `<button class="teambtn" data-act="pick" data-team="${t}" ${offline?"disabled":""}>
         <span class="n">Paddle ${i+1}</span><b>Team ${esc(teamName(t))}</b>
         <span class="st">${offline ? "Needs the live game" : x.now ? `<span class="dot"></span>A device is connected` : "Not joined yet"}</span></button>`; }).join("")}</div>
     </section>
@@ -1003,14 +1155,14 @@ function startView(){
         ? `<div class="row"><span class="muted small">This screen will control the game for everyone.</span><button class="btn ghost" data-act="host-cancel">Cancel</button><button class="btn primary" data-act="be-host">Open the console</button></div>`
         : `<button class="btn" data-act="host-ask">I'm the facilitator</button>`}
     </div>
-    <p class="muted small">Game: ${esc(GAME)}</p>
+    ${new URLSearchParams(location.search).has("game") ? `<p class="muted small">Game: ${esc(GAME)}</p>` : ""}
   </main>`;
 }
 
 /* ===================== FACILITATOR ===================== */
 function statusPill(){
   const c = connState(); const n = tabletCount();
-  return `<span class="pill" title="Team devices connected right now"><span class="dot ${c.cls}"></span>${esc(c.text)}${store.mode==="live" && !c.cls ? ` · ${n}/5 teams` : ""}</span>`;
+  return `<span class="pill" title="Team devices connected right now"><span class="dot ${c.cls}"></span>${esc(c.text)}${store.mode==="live" && !c.cls ? ` · ${n}/${teamIds().length} teams` : ""}</span>`;
 }
 function hostView(){
   const st = S(); const idx = stepIdx(st.phase); const sk = stepKey(st.phase);
@@ -1069,15 +1221,18 @@ function hostJoin(){
   const content = `<div class="split">
     <section class="card stack">
       <p class="eyebrow">On every team phone or tablet</p>
-      <p class="joinurl">${esc(joinAddress())}</p>
-      <p class="muted">Open this address, then tap the team name. Each team lights up below when its device connects.</p>
-      <div class="slots">${TEAM_IDS.map((t,i) => { const x = lt[i]; const on = x.now; return `<div class="slot ${on?"on":""}"><span class="muted small">Paddle ${i+1}</span><b>${esc(teamName(t))}</b><span class="st">${store.mode==="practice" ? "Console bids" : on ? `<span class="dot"></span>Connected` : x.joined ? "Disconnected" : "Waiting…"}</span></div>`; }).join("")}</div>
+      <div class="joinbox">${QR.svg(joinLinkUrl(), "QR code for " + esc(joinLinkText()))}
+        <div class="stack" style="gap:.5em"><p class="joinurl">${esc(joinLinkText())}</p>
+          <p class="muted">Scan the code or type this address, then tap the team name. Each team lights up below when its device connects.</p></div></div>
+      <div class="slots">${teamIds().map((t,i) => { const x = lt[i]; const on = x.now; return `<div class="slot ${on?"on":""}"><span class="muted small">Paddle ${i+1}</span><b>${esc(teamName(t))}</b><span class="st">${store.mode==="practice" ? "Console bids" : on ? `<span class="dot"></span>Connected` : x.joined ? "Disconnected" : "Waiting…"}</span></div>`; }).join("")}</div>
     </section>
     <details class="settings" ${lockedSet?"":"open"}>
       <summary>Game settings${lockedSet?" · locked during play":""}</summary>
       <div class="inner">
         ${lockedSet ? `<div class="notice info">Settings are locked once Round 1 starts, so balances can't change mid-game. Reset the game to edit them.</div>` : ""}
-        <div class="fields">${TEAM_IDS.map((t,i) => `<label class="field" for="tn-${t}">Team ${i+1} name<input id="tn-${t}" data-set="team" data-i="${i}" value="${esc(s.teams[i])}" maxlength="24" ${lockedSet?"disabled":""}></label>`).join("")}</div>
+        <div class="fields teamfields">${teamIds().map((t,i) => `<div class="field teamfield"><label for="tn-${t}">Team ${i+1} name</label><div class="cb-row"><input id="tn-${t}" data-set="team" data-i="${i}" value="${esc(s.teams[i])}" maxlength="24" ${lockedSet?"disabled":""}><button class="btn ghost xbtn" data-act="team-remove" data-i="${i}" aria-label="Remove team ${esc(s.teams[i])}" title="Remove team" ${lockedSet || s.teams.length<=MIN_TEAMS ? "disabled" : ""}>×</button></div></div>`).join("")}</div>
+        <div class="row"><button class="btn" data-act="team-add" ${lockedSet || s.teams.length>=MAX_TEAMS ? "disabled" : ""}>+ Add team</button><span class="muted small">${s.teams.length} teams · ${MIN_TEAMS} to ${MAX_TEAMS}</span></div>
+        <label class="field" for="set-join">Join link shown to teams<input id="set-join" type="text" data-set="joinLink" value="${esc(s.joinLink||"")}" placeholder="${esc(joinAddress())}" autocomplete="off" ${lockedSet?"disabled":""}><span class="muted small" style="font-weight:600">Leave empty to show this page's own address. A short link is easier to type.</span></label>
         <div class="fields">
           <label class="field" for="set-budget">Coins per team<input id="set-budget" type="number" min="100" step="50" data-set="budget" value="${s.budget}" ${lockedSet?"disabled":""}></label>
           <label class="field" for="set-opening">Opening bid<input id="set-opening" type="number" min="10" step="10" data-set="opening" value="${s.opening}" ${lockedSet?"disabled":""}></label>
@@ -1090,7 +1245,7 @@ function hostJoin(){
       </div>
     </details>
   </div>`;
-  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected</div><span class="spacer"></span>
+  const dock = `<div class="ctx">${tabletCount()} of ${teamIds().length} teams connected</div><span class="spacer"></span>
     <button class="btn primary lg" data-act="next" data-phase="rules">Show the rules</button>`;
   return [content, dock];
 }
@@ -1112,7 +1267,7 @@ function hostRules(){
       <p class="source">Maister, D. H., Green, C. H., &amp; Galford, R. M. (2000). <i>The Trusted Advisor</i>. Free Press.</p></section>
     <section class="stack"><p class="eyebrow">House rules</p>${houseRules()}</section>
   </div>`;
-  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected</div><span class="spacer"></span>
+  const dock = `<div class="ctx">${tabletCount()} of ${teamIds().length} teams connected</div><span class="spacer"></span>
     <button class="btn primary lg" data-act="next" data-phase="strategy">Start the ${s.strategyMin}-minute strategy</button>`;
   return [content, dock];
 }
@@ -1121,7 +1276,7 @@ function hostStrategy(){
   const content = `<div class="row" style="align-items:flex-end"><p class="muted" style="max-width:60ch">Teams mark the cards they want on their tablets. Each card's colour shows the trust element it builds.</p><span class="spacer"></span>
       <div style="text-align:right"><div class="big num" style="font-size:3em" data-countdown="${end}">--:--</div><span class="muted small">planning time left</span></div></div>
     ${catalogue(false)}`;
-  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected · every connected tablet switches to Round 1 when you start</div><span class="spacer"></span>${primaryStart()}`;
+  const dock = `<div class="ctx">${tabletCount()} of ${teamIds().length} teams connected · every connected tablet switches to Round 1 when you start</div><span class="spacer"></span>${primaryStart()}`;
   return [content, dock];
 }
 function hostReady(){
@@ -1129,7 +1284,7 @@ function hostReady(){
   const content = `<section class="ready"><span class="eyebrow">Up next</span><div class="big num">Round ${nextRoundNo()}</div>
     ${c ? `<p class="leadline">Lot ${lotNo(nx)} · <span class="el-${c.el}" style="color:var(--el)">${EL[c.el].name}</span></p><p class="muted">The card is revealed on every screen when you start the round.</p>` : `<p class="leadline">Every card has been auctioned.</p>`}
   </section>${scoreboard()}`;
-  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected</div><span class="spacer"></span>${primaryStart()}`;
+  const dock = `<div class="ctx">${tabletCount()} of ${teamIds().length} teams connected</div><span class="spacer"></span>${primaryStart()}`;
   return [content, dock];
 }
 function nextBidAmount(){ const st = S(); const L = leader(); return L ? L.amount + st.settings.step : st.settings.opening; }
@@ -1146,7 +1301,7 @@ function hostBidding(){
       ${callShown ? `<div><span class="call">${st.call===1?"Going once…":"Going twice…"}</span></div>` : `<p class="muted">Next bid: <b class="num">${fmt(nextBidAmount())}</b></p>`}
       <div class="clock" data-timer-end="${end}" data-timer-len="${st.settings.lotSeconds*1000}"><div class="lbl"><span data-clock-label>Round clock</span><b class="num" data-countdown="${end}">--:--</b></div><div class="track"><div class="fill"></div></div></div>
       ${bids.length ? `<ol class="history" aria-label="Bids this round">${bids.slice(0,3).map(x => `<li><span>${esc(teamName(x.team))}</span><span class="num">${fmt(x.b.amount)}</span></li>`).join("")}</ol>` : ""}
-      ${ui.manual ? `<div class="stack" style="gap:.5em"><p class="eyebrow">Enter a bid for a team (paddle raised in the room)</p><div class="row">${TEAM_IDS.map(t => { const can = !(L && L.team===t) && nextBidAmount() <= left(t) && canSync(); return `<button class="btn" data-act="bid-for" data-team="${t}" ${can?"":"disabled"}>${esc(teamName(t))} → ${fmt(nextBidAmount())}</button>`; }).join("")}</div></div>` : ""}
+      ${ui.manual ? `<div class="stack" style="gap:.5em"><p class="eyebrow">Enter a bid for a team (paddle raised in the room)</p><div class="row">${teamIds().map(t => { const can = !(L && L.team===t) && nextBidAmount() <= left(t) && canSync(); return `<button class="btn" data-act="bid-for" data-team="${t}" ${can?"":"disabled"}>${esc(teamName(t))} → ${fmt(nextBidAmount())}</button>`; }).join("")}</div></div>` : ""}
     </section>
   </div>${scoreboard()}`;
   const dock = `<div class="grp"><button class="btn" data-act="call" data-n="1" ${L?"":"disabled"}>Going once</button><button class="btn" data-act="call" data-n="2" ${L?"":"disabled"}>Going twice</button></div>
@@ -1173,7 +1328,7 @@ function hostSold(){
 }
 function scoreboard(){
   const st = S(); const L = st.phase==="bidding" ? leader() : null;
-  return `<section class="score" aria-label="Team budgets">${TEAM_IDS.map(t => `<div class="team ${L&&L.team===t?"lead":""}">
+  return `<section class="score" aria-label="Team budgets">${teamIds().map(t => `<div class="team ${L&&L.team===t?"lead":""}">
     <span class="tn">${esc(teamName(t))}</span>
     <span><span class="coins num">${fmt(left(t))}</span> <span class="lbl">coins left</span></span>
     ${pipsHtml(t)}
@@ -1193,11 +1348,11 @@ function debriefInsights(){
   const ranked = Object.entries(per).sort((a,b) => b[1]-a[1]);
   const pct = v => Math.round(v/total*100);
   out.push({b:`${EL[ranked[0][0]].name} took ${pct(ranked[0][1])}% of the coins.`, s:`${EL[ranked[3][0]].name} got ${pct(ranked[3][1])}%. What does that say about where HR invests?`});
-  const tt = TEAM_IDS.map(t => ({t, T:teamTrust(t).T, spent:spent(t), purple:colourCount(t).s>0}));
+  const tt = teamIds().map(t => ({t, T:teamTrust(t).T, spent:spent(t), purple:colourCount(t).s>0}));
   const withP = tt.filter(x => x.purple), withoutP = tt.filter(x => !x.purple && x.spent>0);
   const avg = xs => xs.length ? xs.reduce((a,x) => a+x.T, 0)/xs.length : 0;
   if (!withP.length) out.push({b:"No team bought a purple card.", s:"Self-orientation is the divisor, so every trust score stayed low."});
-  else out.push({b:`${withP.length} of 5 teams bought a purple card.`, s: withoutP.length ? `Their average trust score: ${fmtT(avg(withP))}, against ${fmtT(avg(withoutP))} for the others.` : `Average trust score: ${fmtT(avg(withP))}.`});
+  else out.push({b:`${withP.length} of ${tt.length} teams bought a purple card.`, s: withoutP.length ? `Their average trust score: ${fmtT(avg(withP))}, against ${fmtT(avg(withoutP))} for the others.` : `Average trust score: ${fmtT(avg(withP))}.`});
   const topSpend = [...tt].sort((a,b) => b.spent-a.spent)[0], topTrust = [...tt].sort((a,b) => b.T-a.T)[0];
   if (topSpend.t===topTrust.t) out.push({b:`Team ${teamName(topSpend.t)} spent the most and built the most trust.`, s:`${fmt(topSpend.spent)} coins, trust score ${fmtT(topSpend.T)}.`});
   else out.push({b:`Spending most didn't build the most trust.`, s:`Team ${teamName(topSpend.t)} spent ${fmt(topSpend.spent)}. Team ${teamName(topTrust.t)} built the most trust (${fmtT(topTrust.T)}).`});
@@ -1223,7 +1378,7 @@ function hostDebrief(){
         ${unc.length ? `<p class="question">Nobody paid for these. Is that what employees experience from us?</p>` : ""}</section>
     </div>`;
   } else if (ui.dtab==="trust") {
-    const tr = TEAM_IDS.map(t => ({t, tt: teamTrust(t)})).sort((a,b) => b.tt.T-a.tt.T);
+    const tr = teamIds().map(t => ({t, tt: teamTrust(t)})).sort((a,b) => b.tt.T-a.tt.T);
     body = `<div class="split">
       <section class="card stack">
         <div class="row"><p class="eyebrow">Team trust scores · (C + R + I) ÷ S</p><span class="spacer"></span><span class="muted small">Room median <b class="num">${fmtT(roomTrust())}</b></span></div>
@@ -1245,7 +1400,7 @@ function hostDebrief(){
       <div class="row"><p class="question" style="flex:1">Which card was most worth the money, and where will you use it in a real HR situation next month?</p>
         ${pitchEnd ? `<b class="big num" style="font-size:2.4em" data-countdown="${pitchEnd}">1:00</b>` : ""}
         <button class="btn" data-act="pitch">${pitchEnd?"Restart":"Start"} 1-minute timer</button></div>
-      <div class="holdings">${TEAM_IDS.map(t => { const cs = owned(t); return `<div class="holding"><b>${esc(teamName(t))}</b>${pipsHtml(t)}<span class="muted small num">${fmt(spent(t))} spent · trust ${fmtT(teamTrust(t).T)}</span>${cs.map(c => `<div class="mini el-${c.el}"><span>${esc(c.text)}</span><span class="who num">${fmt(st.sold[c.id].price)} coins</span></div>`).join("") || `<span class="muted small">No cards</span>`}</div>`; }).join("")}</div>
+      <div class="holdings">${teamIds().map(t => { const cs = owned(t); return `<div class="holding"><b>${esc(teamName(t))}</b>${pipsHtml(t)}<span class="muted small num">${fmt(spent(t))} spent · trust ${fmtT(teamTrust(t).T)}</span>${cs.map(c => `<div class="mini el-${c.el}"><span>${esc(c.text)}</span><span class="who num">${fmt(st.sold[c.id].price)} coins</span></div>`).join("") || `<span class="muted small">No cards</span>`}</div>`; }).join("")}</div>
     </section>`;
   }
   const content = `<section class="insights" aria-label="Key insights">${debriefInsights().map(x => `<div class="insight"><b>${esc(x.b)}</b><span>${esc(x.s)}</span></div>`).join("")}</section>
@@ -1260,13 +1415,13 @@ function hostDebrief(){
 function hostVote(){
   const {list, voters} = voteTotals();
   const max = Math.max(1, ...list.map(x => x.n));
-  const per = TEAM_IDS.map(t => { const v = store.votes[t]; return (v && v.voteRound===S().voteRound) ? (v.voters||0) : 0; });
+  const per = teamIds().map(t => { const v = store.votes[t]; return (v && v.voteRound===S().voteRound) ? (v.voters||0) : 0; });
   const content = `<div class="split">
     <section class="card stack"><p class="eyebrow">Live tally · dots per principle</p>
       <div class="tally">${list.map(x => { const c=CARD[x.id]; return `<div class="t el-${c.el}"><span>${esc(c.text)}</span><span class="n num">${x.n}</span><div class="trk"><div class="fil" style="width:${(x.n/max*100).toFixed(1)}%"></div></div></div>`; }).join("")}</div></section>
     <section class="card stack"><p class="eyebrow">People who have voted</p><div class="big num">${voters}</div>
       <p class="muted">Each team passes its tablet from person to person. Everyone picks 3 principles from the cards that were bought.</p>
-      <div class="row">${TEAM_IDS.map((t,i) => `<span class="pill">${esc(teamName(t))} · <span class="num">${per[i]}</span></span>`).join("")}</div></section>
+      <div class="row">${teamIds().map((t,i) => `<span class="pill">${esc(teamName(t))} · <span class="num">${per[i]}</span></span>`).join("")}</div></section>
   </div>`;
   const dock = `<div class="grp"><button class="btn danger-ghost" data-act="revote-ask">Clear all votes</button></div><span class="spacer"></span>
     <button class="btn primary lg" data-act="next" data-phase="top5" ${voters?"":"disabled"}>${voters?"Reveal the Top 5":"Reveal the Top 5 (waiting for votes)"}</button>`;
@@ -1328,7 +1483,7 @@ function tabletView(t){
     bidStat = `<div class="stat"><span class="l">Cards won</span><span class="v num">${n}</span><span class="s">${cols} of 4 colours${hasSet(t)?` · +${st.settings.bonus} IP`:""}</span></div>`;
   }
   const head = `<header class="tbar">
-    <div class="tb-row"><span class="tn"><span class="paddle">${TEAM_IDS.indexOf(t)+1}</span><span>Team ${esc(teamName(t))}</span></span>
+    <div class="tb-row"><span class="tn"><span class="paddle">${teamIndex(t)+1}</span><span>Team ${esc(teamName(t))}</span></span>
       <span class="conn"><span class="dot ${c.cls}"></span>${esc(c.text)}</span></div>
     <div class="stats"><div class="stat"><span class="l">Coins left</span><span class="v num">${fmt(myLeft)}</span><span class="s">of ${fmt(st.settings.budget)}</span></div>${bidStat}</div>
   </header>`;
@@ -1550,6 +1705,7 @@ function runModal(){
     case "nosale": noSale(); break;
     case "revote": hostWrite(st => { st.voteRound = (st.voteRound||1)+1; }); toast("", "All votes cleared."); break;
     case "leave": leaveRole(); break;
+    case "team-remove": removeTeam(m.data); break;
   }
 }
 
@@ -1603,6 +1759,11 @@ $app.addEventListener("click", e => {
     case "bid-for": if (once("bidfor-"+b.dataset.team, 400)) placeBid(b.dataset.team, nextBidAmount()); break;   // per team, so two paddles can be entered back to back
     case "pitch": if (once(a)) hostWrite(s2 => { s2.pitchAt = now(); }); break;
     case "dtab": ui.dtab = b.dataset.tab; break;
+    case "team-add": if (once(a, 300)) addTeam(); break;   // absorbs an accidental double-click only
+    case "team-remove": { const i = Number(b.dataset.i); const id = "t" + (i+1);
+      if (connectedTeams()[id]) ask("team-remove", `Remove Team ${teamName(id)}?`, "A device is connected as this team. It will go back to the team list, and teams after it move up one paddle number.", "Remove the team", true, i);
+      else if (once(a, 300)) removeTeam(i);
+      break; }
     case "bid": if (team) doBid(team, Number(b.dataset.amount)); break;
     case "custom-yes": if (team && ui.customOffer) doBid(team, ui.customOffer); break;
     case "custom-no": ui.customOffer = null; break;
@@ -1636,6 +1797,7 @@ $app.addEventListener("change", e => {
     const key = el.dataset.set;
     hostWrite(st => {
       if (key==="team") { const name = el.value.trim(); if (name) st.settings.teams[Number(el.dataset.i)] = name; }
+      else if (key==="joinLink") st.settings.joinLink = el.value.trim().slice(0, 200);
       else { const n = Math.round(Number(el.value)); if (n>0) st.settings[key] = n; }
     });
   } else if (el.dataset.plan && ui.role && ui.role!=="host") {
