@@ -1,0 +1,1602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Leadership Auction</title>
+<meta name="description" content="HR X Offsite live trust-principle auction: projector console and team tablets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* Layout: one light, workshop-grade system. Projector = header stepper + stage + fixed control dock. Phone = sticky team/budget bar + one primary action. */
+:root{
+  color-scheme: light;
+  --bg:#F2F4F7; --surface:#FFFFFF; --sunk:#EDF0F4; --ink:#0E1A2B; --ink-2:#465264; --ink-3:#6A7587; --line:#DDE2EA; --line-2:#C7CFDA;
+  --primary:#13294B; --primary-hover:#1D3B67; --on-primary:#FFFFFF;
+  --accent:#B7791F; --accent-soft:#FBF1DE; --accent-ink:#7A4E0C;
+  --ok:#0F7B55; --ok-soft:#E3F4EC; --warn:#9A5806; --warn-soft:#FDF0DC; --danger:#B42318; --danger-soft:#FDE8E6;
+  --c:#2557C7; --c-soft:#E7EEFC; --r:#0E7A53; --r-soft:#E0F3EA; --i:#B04E0D; --i-soft:#FCEBDD; --s:#6B3FC4; --s-soft:#EFE8FB;
+  --f-ui:"Manrope","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-card:"Source Serif 4","Georgia","Times New Roman",serif;
+  --rad-sm:8px; --rad:12px; --rad-lg:16px;
+  --shadow:0 1px 2px rgba(14,26,43,.06),0 6px 20px rgba(14,26,43,.06);
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+[hidden]{display:none!important}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{line-height:1.15;text-wrap:balance;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-2)}
+.small{font-size:.875em}
+.eyebrow{font-size:.78em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.row{display:flex;flex-wrap:wrap;gap:.6em;align-items:center}
+.spacer{flex:1}
+.stack{display:grid;gap:1em;align-content:start}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* element colour scopes */
+.el-c{--el:var(--c);--el-soft:var(--c-soft)} .el-r{--el:var(--r);--el-soft:var(--r-soft)}
+.el-i{--el:var(--i);--el-soft:var(--i-soft)} .el-s{--el:var(--s);--el-soft:var(--s-soft)}
+.tag{font-family:var(--f-ui);display:inline-flex;align-items:center;gap:.4em;font-size:.8em;font-weight:700;color:var(--el);background:var(--el-soft);border-radius:999px;padding:.2em .7em;white-space:nowrap}
+.tag::before{content:"";width:.55em;height:.55em;border-radius:50%;background:var(--el)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;min-height:44px;padding:.6em 1.1em;border-radius:var(--rad-sm);
+  border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:700;line-height:1.2;text-align:center;transition:background .15s,border-color .15s,transform .06s}
+.btn:hover:not(:disabled){background:var(--sunk)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.btn.primary:hover:not(:disabled){background:var(--primary-hover)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.danger:hover:not(:disabled){background:#97190F}
+.btn.danger-ghost{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,var(--line-2))}
+.btn.danger-ghost:hover:not(:disabled){background:var(--danger-soft)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2)}
+.btn.ghost:hover:not(:disabled){background:var(--sunk);color:var(--ink)}
+.btn.lg{min-height:56px;font-size:1.08em;padding:.7em 1.5em}
+.btn.block{width:100%}
+.btn .sub{display:block;font-size:.78em;font-weight:600;opacity:.85}
+.btn.busy{position:relative;color:transparent!important}
+.btn.busy::after{content:"";position:absolute;width:1.1em;height:1.1em;border:2.5px solid currentColor;border-color:var(--on-primary) transparent var(--on-primary) transparent;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.link{background:none;border:0;padding:.4em .2em;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px;font-weight:600;min-height:44px}
+
+/* ---------- surfaces ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:1.25em}
+.card.flat{border:0;background:var(--sunk)}
+.notice{border-radius:var(--rad-sm);padding:.8em 1em;font-size:.95em;display:flex;gap:.6em;align-items:flex-start;flex-wrap:wrap}
+.notice b{font-weight:800}
+.notice.err{background:var(--danger-soft);color:#6E1309;border:1px solid color-mix(in srgb,var(--danger) 30%,transparent)}
+.notice.warn{background:var(--warn-soft);color:#5C3604;border:1px solid color-mix(in srgb,var(--warn) 30%,transparent)}
+.notice.info{background:var(--sunk);color:var(--ink-2)}
+.notice .btn{min-height:36px;padding:.35em .8em}
+
+.dot{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:var(--ok);flex:none}
+.dot.warn{background:var(--accent)} .dot.err{background:var(--danger)} .dot.off{background:var(--line-2)}
+.pill{display:inline-flex;align-items:center;gap:.45em;font-size:.85em;font-weight:700;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.3em .8em;white-space:nowrap}
+
+/* ---------- lot card ---------- */
+.lot{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad-lg);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.lot .band{height:.5em;background:var(--el)}
+.lot .body{padding:1.4em 1.5em 1.5em;display:grid;gap:.9em;align-content:start}
+.lot .meta{display:flex;flex-wrap:wrap;gap:.5em;align-items:center;justify-content:space-between}
+.lot .lotno{font-size:.85em;font-weight:700;color:var(--ink-3)}
+.lot .text{font-family:var(--f-card);font-weight:600;font-size:1.65em;line-height:1.22;text-wrap:balance;color:var(--ink)}
+.lot .gloss{color:var(--ink-2);font-size:.95em}
+.pts{font-size:.8em;font-weight:700;color:var(--ink-3)}
+
+/* ---------- trust rating chips (debrief / strategy / scoring) ---------- */
+.wts{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center}
+.wt{display:inline-flex;align-items:center;border-radius:5px;padding:1px 6px;font-weight:800;font-size:.78em;background:var(--sunk);color:var(--ink-3)}
+.wt.on{background:var(--el-soft);color:var(--el)}
+.wt-c{--el:var(--c);--el-soft:var(--c-soft)} .wt-r{--el:var(--r);--el-soft:var(--r-soft)} .wt-i{--el:var(--i);--el-soft:var(--i-soft)} .wt-s{--el:var(--s);--el-soft:var(--s-soft)}
+.why{font-size:.9em;color:var(--ink-2);max-width:62ch}
+.method{display:grid;gap:.6em;margin:0;padding-left:1.2em}
+.formula{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:.9em;background:var(--sunk);border-radius:var(--rad-sm);padding:.6em .8em;overflow-x:auto;white-space:nowrap}
+.caveat{border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--rad-sm) var(--rad-sm) 0;padding:.7em 1em;font-size:.9em;color:#4E3307}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--rad)}
+table.scores{border-collapse:collapse;width:100%;min-width:720px;font-size:.88em;background:var(--surface)}
+table.scores th,table.scores td{padding:.55em .7em;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.scores th{font-size:.75em;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);background:var(--sunk)}
+table.scores td.n{text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+table.scores td.n.z{color:var(--line-2)}
+table.scores tr td:first-child{border-left:5px solid var(--el)}
+
+/* ---------- equation ---------- */
+.equation{display:flex;flex-wrap:wrap;align-items:center;gap:.25em .5em;font-weight:800;font-size:2em;line-height:1.1}
+.equation .frac{display:inline-grid;text-align:center}
+.equation .frac>span:first-child{border-bottom:3px solid var(--ink);padding:0 .25em .08em}
+.equation .frac>span:last-child{padding-top:.08em}
+.eqc{color:var(--c)} .eqr{color:var(--r)} .eqi{color:var(--i)} .eqs{color:var(--s)}
+.elements{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7em}
+.eltile{border-radius:var(--rad);background:var(--el-soft);padding:.9em 1em;display:grid;gap:.2em;align-content:start}
+.eltile b{color:var(--el)}
+.eltile span{font-size:.92em;color:var(--ink-2)}
+
+/* ---------- modal / menu / toast ---------- */
+.overlay{position:fixed;inset:0;background:rgba(14,26,43,.45);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{background:var(--surface);border-radius:var(--rad-lg);box-shadow:0 20px 60px rgba(14,26,43,.3);width:min(480px,100%);padding:1.5em;display:grid;gap:1em;font-size:16px}
+.modal h2{font-size:1.25em}
+.modal .actions{display:flex;flex-wrap:wrap;gap:.6em;justify-content:flex-end}
+.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow);min-width:230px;padding:.4em;display:grid;z-index:40;font-size:15px}
+.menu button{display:flex;justify-content:space-between;gap:1em;text-align:left;background:none;border:0;border-radius:var(--rad-sm);padding:.65em .8em;font-weight:600;min-height:44px}
+.menu button:hover{background:var(--sunk)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:.3em 0}
+.menu .danger{color:var(--danger)}
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:60;width:min(440px,calc(100% - 32px));pointer-events:none}
+.toast{background:var(--ink);color:#fff;border-radius:var(--rad);padding:.75em 1em;font-weight:700;box-shadow:0 8px 24px rgba(14,26,43,.25);display:flex;gap:.6em;align-items:center;animation:pop .25s ease-out;font-size:15px}
+.toast.ok{background:var(--ok)} .toast.err{background:var(--danger)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}}
+
+/* ---------- start screen ---------- */
+.start{max-width:860px;margin:0 auto;padding:clamp(24px,6vh,64px) max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));display:grid;gap:1.6em}
+.brand{display:flex;align-items:center;gap:.6em;font-weight:800;color:var(--ink)}
+.brand svg{width:26px;height:26px;color:var(--accent);flex:none}
+.start h1{font-size:clamp(2rem,5vw,3rem)}
+.start .lede{font-size:1.1rem;color:var(--ink-2);max-width:56ch}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75em}
+.teambtn{display:grid;gap:.35em;justify-items:start;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--rad);padding:1em 1.1em;min-height:104px;transition:border-color .15s,box-shadow .15s}
+.teambtn:hover:not(:disabled){border-color:var(--primary);box-shadow:var(--shadow)}
+.teambtn:disabled{opacity:.5;cursor:not-allowed}
+.teambtn .n{font-size:.8em;font-weight:800;color:var(--ink-3)}
+.teambtn b{font-size:1.12em}
+.teambtn .st{font-size:.85em;color:var(--ink-3);display:flex;gap:.4em;align-items:center}
+.facil{display:flex;flex-wrap:wrap;gap:.8em;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:1.2em}
+
+/* ===================== FACILITATOR ===================== */
+.host{font-size:clamp(15px,1.05vw,20px);min-height:100vh;display:grid;grid-template-rows:auto auto 1fr auto}
+.hbar{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:.6em 1.2em;padding:.6em max(16px,env(safe-area-inset-right,0px)) .6em max(16px,env(safe-area-inset-left,0px))}
+.hbar .brand{font-size:.95em}
+.steps{display:flex;flex-wrap:wrap;gap:.25em;margin:0;padding:0;list-style:none;flex:1;justify-content:center}
+.steps button{display:inline-flex;align-items:center;gap:.45em;border:0;background:none;border-radius:999px;padding:.4em .8em;font-weight:700;font-size:.88em;color:var(--ink-3);min-height:40px}
+.steps button .k{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:var(--sunk);font-size:.85em}
+.steps button.done{color:var(--ink-2)}
+.steps button.done .k{background:var(--ok-soft);color:var(--ok)}
+.steps button[aria-current="step"]{background:var(--primary);color:#fff}
+.steps button[aria-current="step"] .k{background:rgba(255,255,255,.18);color:#fff}
+.steps button:hover:not(:disabled):not([aria-current="step"]){background:var(--sunk);color:var(--ink)}
+.steps button:disabled{cursor:not-allowed;opacity:.55}
+.hbar .tools{display:flex;gap:.5em;align-items:center;position:relative}
+.hbanners{display:grid;gap:.5em;padding:.6em max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.hstage{padding:.9em max(16px,env(safe-area-inset-right,0px)) 1.2em max(16px,env(safe-area-inset-left,0px));display:grid;gap:.9em;align-content:start;max-width:1600px;width:100%;margin:0 auto;min-width:0}
+.phead{display:grid;gap:.3em}
+.phead h1{font-size:1.65em}
+.phead p{color:var(--ink-2);font-size:1.05em;max-width:70ch}
+.hdock{position:sticky;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(14,26,43,.05);
+  display:flex;flex-wrap:wrap;gap:.6em;align-items:center;padding:.75em max(16px,env(safe-area-inset-right,0px)) calc(.75em + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.hdock .ctx{color:var(--ink-2);font-size:.92em;display:flex;gap:.5em;align-items:center;flex-wrap:wrap;min-width:0}
+.hdock .grp{display:flex;gap:.5em;flex-wrap:wrap;align-items:center}
+.hdock .sep{width:1px;align-self:stretch;background:var(--line);margin:0 .3em}
+
+/* join */
+.joinurl{font-size:1.5em;font-weight:800;word-break:break-all;color:var(--primary)}
+.slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.7em}
+.slot{border:1.5px dashed var(--line-2);border-radius:var(--rad);padding:.9em;display:grid;gap:.25em;background:var(--surface)}
+.slot.on{border-style:solid;border-color:var(--ok);background:var(--ok-soft)}
+.slot .st{font-size:.85em;font-weight:700;color:var(--ink-3);display:flex;gap:.4em;align-items:center}
+.slot.on .st{color:var(--ok)}
+details.settings{border:1px solid var(--line);border-radius:var(--rad);background:var(--surface)}
+details.settings>summary{cursor:pointer;padding:.9em 1.1em;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:1em;min-height:44px;align-items:center}
+details.settings>summary::-webkit-details-marker{display:none}
+details.settings>summary::after{content:"Show";font-size:.85em;color:var(--ink-3);font-weight:600}
+details.settings[open]>summary::after{content:"Hide"}
+details.settings .inner{padding:0 1.1em 1.1em;display:grid;gap:.9em}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7em}
+.field{display:grid;gap:.25em;font-size:.85em;font-weight:700;color:var(--ink-2)}
+.field input{font:inherit;font-size:1rem;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--rad-sm);padding:.5em .65em;min-height:44px;width:100%}
+.field input:disabled{background:var(--sunk);color:var(--ink-3)}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7em}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:1em;display:grid;grid-template-columns:auto 1fr;gap:.2em .9em;align-items:start}
+.rule .k{grid-row:span 2;font-size:1.6em;font-weight:800;color:var(--primary);min-width:3.4ch;line-height:1.1}
+.rule b{font-size:1em}
+.rule span{color:var(--ink-2);font-size:.92em}
+.source{font-size:.85em;color:var(--ink-3)}
+
+/* catalogue */
+.catalogue{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8em}
+.col{display:grid;gap:.5em;align-content:start}
+.col h3{font-size:.95em;color:var(--el);display:flex;align-items:center;gap:.4em}
+.col h3::before{content:"";width:.6em;height:.6em;border-radius:50%;background:var(--el)}
+.mini{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--el);border-radius:var(--rad-sm);padding:.55em .7em;display:grid;gap:.15em;font-size:.88em;line-height:1.35;text-align:left;width:100%}
+.mini .who{font-size:.85em;font-weight:700;color:var(--ink-3)}
+.mini.sold{background:var(--sunk);color:var(--ink-3)}
+.mini.unc{border-style:dashed;border-left-style:solid}
+button.mini:hover:not(:disabled){border-color:var(--primary);border-left-color:var(--el)}
+button.mini:disabled{cursor:not-allowed}
+.drawer{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad-lg);box-shadow:var(--shadow);padding:1.2em;display:grid;gap:1em}
+
+/* auction */
+.auction{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1.1em;align-items:stretch}
+.host .lot .text{font-size:2.3em}
+.host .lot .body{flex:1;align-content:center;padding:1.6em 2em}
+.bidbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad-lg);padding:1.1em 1.3em;display:grid;gap:.75em;align-content:start;min-width:0}
+.big{font-weight:800;font-size:4.2em;line-height:1;letter-spacing:-.02em}
+.big small{font-size:.25em;font-weight:700;color:var(--ink-3);letter-spacing:.04em;margin-left:.3em}
+.leadline{font-size:1.35em;font-weight:800}
+.leadline.none{color:var(--ink-3);font-weight:700}
+.call{display:inline-block;background:var(--danger-soft);color:var(--danger);font-weight:800;font-size:1.25em;border-radius:var(--rad-sm);padding:.25em .7em;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+.clock{display:grid;gap:.35em}
+.clock .lbl{display:flex;justify-content:space-between;font-weight:700;font-size:.92em;color:var(--ink-2)}
+.clock .track{height:10px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.clock .fill{height:100%;background:var(--primary);width:100%;transition:width .25s linear}
+.clock.over .fill{background:var(--danger)}
+.clock.over .lbl{color:var(--danger)}
+.late{color:var(--danger)}
+.history{display:grid;gap:.35em;margin:0;padding:0;list-style:none}
+.history li{display:flex;justify-content:space-between;gap:1em;padding:.45em .7em;border-radius:var(--rad-sm);background:var(--sunk);font-weight:600}
+.history li:first-child{background:var(--accent-soft);color:var(--accent-ink);font-weight:800}
+.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6em}
+.team{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:.55em .8em;display:grid;gap:.25em;min-width:0}
+.team.lead{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.team .tn{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team .coins{font-weight:800;font-size:1.4em;line-height:1}
+.team .lbl{font-size:.8em;color:var(--ink-3);font-weight:600}
+.pips{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pip{min-width:1.45em;height:1.45em;border-radius:5px;border:2px solid var(--el);display:grid;place-items:center;font-size:.72em;font-weight:800;color:var(--el)}
+.pip.on{background:var(--el);color:#fff}
+.bonus{font-size:.72em;font-weight:800;background:var(--accent-soft);color:var(--accent-ink);border-radius:4px;padding:2px 6px;white-space:nowrap}
+.result{display:grid;gap:1em;justify-items:center;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--rad-lg);padding:clamp(1.5em,5vh,3em) 1.2em}
+.stamp{font-weight:800;font-size:3.4em;line-height:1;letter-spacing:.04em;color:var(--accent);border:4px solid currentColor;border-radius:10px;padding:.08em .4em;transform:rotate(-3deg);animation:thump .4s cubic-bezier(.2,1.5,.4,1)}
+.stamp.none{color:var(--ink-3)}
+@keyframes thump{from{transform:rotate(-3deg) scale(1.5);opacity:0}}
+.result .what{font-family:var(--f-card);font-size:1.4em;max-width:34ch;font-weight:600}
+.ready{display:grid;gap:.8em;justify-items:center;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--rad-lg);padding:clamp(2em,8vh,4em) 1.2em}
+.ready .big{font-size:5em}
+
+/* debrief */
+.seg{display:inline-flex;background:var(--sunk);border-radius:999px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:999px;padding:.5em 1.1em;font-weight:700;color:var(--ink-2);min-height:40px}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(14,26,43,.12)}
+.split{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:1.1em;align-items:start}
+.bars{display:grid;gap:.8em}
+.bar-row{display:grid;grid-template-columns:10em minmax(0,1fr) 6em;gap:.8em;align-items:center}
+.bar-row .lbl{font-weight:800;color:var(--el)}
+.bar-row .trk{height:1.6em;background:var(--sunk);border-radius:6px;overflow:hidden}
+.bar-row .fil{height:100%;background:var(--el);border-radius:6px;transition:width .6s ease}
+.bar-row .val{text-align:right;font-weight:800}
+.question{border-left:4px solid var(--primary);padding:.3em 0 .3em 1em;font-size:1.15em;font-weight:700;color:var(--ink)}
+.insights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8em}
+.insight{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:1em;display:grid;gap:.3em;align-content:start}
+.insight b{font-size:1.05em}
+.insight span{color:var(--ink-2);font-size:.95em}
+.rank{display:grid;gap:.5em}
+.rank-row{display:grid;grid-template-columns:2em minmax(8em,1fr) minmax(0,2fr) auto;gap:.9em;align-items:center;padding:.7em .9em;border-radius:var(--rad);background:var(--surface);border:1px solid var(--line)}
+.rank-row.first{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.rank-row .rk{font-weight:800;font-size:1.3em;color:var(--ink-3)}
+.rank-row.first .rk{color:var(--accent)}
+.stackbar{display:flex;height:1.1em;border-radius:5px;overflow:hidden;background:var(--sunk)}
+.stackbar i{display:block;height:100%}
+.rank-row .tv{font-weight:800;font-size:1.5em;min-width:3.2ch;text-align:right}
+.rank-row .sub{font-size:.82em;color:var(--ink-3)}
+.legend{display:flex;flex-wrap:wrap;gap:.4em 1em;font-size:.85em;color:var(--ink-2)}
+.legend i{display:inline-block;width:.8em;height:.8em;border-radius:3px;margin-right:.35em;vertical-align:-.05em}
+details.how{border:1px solid var(--line);border-radius:var(--rad);background:var(--surface)}
+details.how>summary{cursor:pointer;padding:.8em 1em;font-weight:700;min-height:44px;display:flex;align-items:center}
+details.how .inner{padding:0 1em 1em;display:grid;gap:.8em}
+.holdings{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.7em}
+.holding{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);padding:.8em;display:grid;gap:.45em;align-content:start;min-width:0}
+
+/* vote + top 5 */
+.tally{display:grid;gap:.55em}
+.tally .t{display:grid;grid-template-columns:minmax(0,1fr) 3em;gap:.2em .8em;align-items:center}
+.tally .t .trk{grid-column:1/-1;height:.55em;background:var(--sunk);border-radius:4px;overflow:hidden}
+.tally .t .fil{height:100%;background:var(--el);transition:width .5s ease}
+.tally .t .n{text-align:right;font-weight:800}
+.top5{display:grid;gap:.6em}
+.top{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:.9em;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--el);border-radius:var(--rad);padding:.8em 1em;animation:rise .45s ease both}
+.top .rk{font-weight:800;font-size:1.6em;color:var(--accent)}
+.top .t{font-family:var(--f-card);font-weight:600;font-size:1.2em;line-height:1.25}
+.top .d{font-weight:800;color:var(--ink-2);white-space:nowrap}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+.lens{display:grid;gap:.7em}
+.lens-row{display:grid;grid-template-columns:9.5em minmax(0,1fr) auto;gap:.8em;align-items:center}
+.lens-row .lbl{font-weight:800;color:var(--el)}
+.lens-row .cells{display:flex;gap:4px}
+.lens-row .cells i{flex:1;height:1.4em;border-radius:4px;background:var(--sunk)}
+.lens-row .cells i.on{background:var(--el)}
+.lens-row .cells i.half{background:var(--el-soft);box-shadow:inset 0 0 0 2px var(--el)}
+
+/* ===================== PARTICIPANT ===================== */
+.tab{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.tbar{position:sticky;top:0;z-index:30;background:var(--primary);color:#fff;padding:.7em max(16px,env(safe-area-inset-right,0px)) .8em max(16px,env(safe-area-inset-left,0px));display:grid;gap:.6em;box-shadow:0 4px 16px rgba(14,26,43,.15)}
+.tbar .tb-row{display:flex;justify-content:space-between;align-items:center;gap:.6em}
+.tbar .tn{font-weight:800;font-size:1.1em;display:flex;gap:.5em;align-items:center;min-width:0}
+.tbar .tn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbar .paddle{display:inline-grid;place-items:center;min-width:1.7em;height:1.7em;border-radius:6px;background:rgba(255,255,255,.16);font-size:.85em}
+.tbar .conn{font-size:.8em;font-weight:700;display:flex;align-items:center;gap:.4em;opacity:.95;white-space:nowrap}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:.5em}
+.stat{background:rgba(255,255,255,.1);border-radius:var(--rad-sm);padding:.45em .7em;display:grid;min-width:0}
+.stat .l{font-size:.72em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.stat .v{font-weight:800;font-size:1.45em;line-height:1.15}
+.stat .s{font-size:.8em;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat.lead{background:var(--accent);color:#fff}
+.tmain{flex:1;padding:1em max(16px,env(safe-area-inset-right,0px)) 1.5em max(16px,env(safe-area-inset-left,0px));display:grid;gap:1em;align-content:start}
+.progress{display:grid;gap:.35em}
+.progress .lbl{display:flex;justify-content:space-between;font-size:.85em;font-weight:700;color:var(--ink-2)}
+.progress .trk{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress .fil{height:100%;background:var(--primary);border-radius:3px}
+.goal{font-size:1.05em;font-weight:600}
+.status{border-radius:var(--rad);padding:.85em 1em;font-weight:800;font-size:1.05em;display:flex;gap:.6em;align-items:center}
+.status .ic{flex:none;width:1.6em;height:1.6em;border-radius:50%;display:grid;place-items:center;font-size:.85em}
+.status.lead{background:var(--ok-soft);color:var(--ok)} .status.lead .ic{background:var(--ok);color:#fff}
+.status.out{background:var(--warn-soft);color:var(--warn)} .status.out .ic{background:var(--accent);color:#fff}
+.status.idle{background:var(--sunk);color:var(--ink-2)} .status.idle .ic{background:var(--line-2);color:#fff}
+.status.no{background:var(--danger-soft);color:var(--danger)} .status.no .ic{background:var(--danger);color:#fff}
+.status small{display:block;font-weight:600;font-size:.85em;opacity:.9}
+.tab .lot .text{font-size:1.35em}
+.tab .lot .body{padding:1.1em 1.15em 1.2em}
+.bidarea{display:grid;gap:.6em}
+.bidmain{min-height:76px;font-size:1.3em;border-radius:var(--rad);flex-direction:column;gap:.15em}
+.jumps{display:grid;grid-template-columns:1fr 1fr;gap:.6em}
+.jumps .btn{min-height:52px}
+.why-not{font-size:.92em;color:var(--ink-2);text-align:center}
+.feedback{border-radius:var(--rad-sm);padding:.6em .9em;font-weight:700;font-size:.95em;text-align:center}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.err{background:var(--danger-soft);color:var(--danger)}
+.feedback.wait{background:var(--sunk);color:var(--ink-2)}
+.tfoot{display:flex;justify-content:center;padding:.5em 16px 1.2em}
+.sticky-cta{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 70%,rgba(242,244,247,0));padding:1em 0 calc(.6em + env(safe-area-inset-bottom,0px))}
+.planrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.4em .8em;align-items:start;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--el);border-radius:var(--rad-sm);padding:.7em .8em}
+.planrow.on{border-color:var(--el);box-shadow:inset 0 0 0 1px var(--el)}
+.chk{width:32px;height:32px;border-radius:7px;border:2px solid var(--el);background:var(--surface);display:grid;place-items:center;font-weight:800;color:#fff;margin-top:2px}
+.chk[aria-pressed="true"]{background:var(--el)}
+.planrow .txt{font-size:.98em;line-height:1.35}
+.planrow .max{grid-column:2;display:flex;gap:.5em;align-items:center;font-size:.88em;font-weight:700;color:var(--ink-2)}
+.planrow .max input{font:inherit;font-weight:700;width:7em;border:1px solid var(--line-2);border-radius:var(--rad-sm);padding:.4em .55em;min-height:40px;color:var(--ink)}
+.votecard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.8em;align-items:center;text-align:left;width:100%;background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--el);border-radius:var(--rad);padding:.85em .9em;min-height:60px}
+.votecard .vdot{width:28px;height:28px;border-radius:50%;border:2px solid var(--line-2);display:grid;place-items:center;color:#fff;font-weight:800;font-size:.85em}
+.votecard[aria-pressed="true"]{border-color:var(--primary);border-left-color:var(--el);box-shadow:inset 0 0 0 1px var(--primary)}
+.votecard[aria-pressed="true"] .vdot{background:var(--primary);border-color:var(--primary)}
+.votecard .vt{font-family:var(--f-card);font-weight:600;font-size:1.02em;line-height:1.3}
+.done{display:grid;gap:.9em;justify-items:center;text-align:center;padding:2em 1em}
+.done .check{width:64px;height:64px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:1.8em;font-weight:800}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+.center{display:grid;gap:1em;justify-items:center;text-align:center;padding:3em 1em}
+
+@media (max-width:1100px){
+  .score,.slots,.holdings{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .catalogue,.elements{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insights{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:860px){
+  .auction,.split{grid-template-columns:minmax(0,1fr)}
+  .rules{grid-template-columns:minmax(0,1fr)}
+  .steps{justify-content:flex-start;order:3;width:100%;overflow-x:auto;flex-wrap:nowrap}
+  .steps button .t{display:none}
+  .steps button[aria-current="step"] .t{display:inline}
+}
+@media (max-width:560px){
+  .catalogue,.elements{grid-template-columns:minmax(0,1fr)}
+  .bar-row{grid-template-columns:minmax(0,1fr) 5em}
+  .bar-row .trk{grid-column:1/-1;grid-row:2}
+  .rank-row{grid-template-columns:2em minmax(0,1fr) auto}
+  .rank-row .stackwrap{grid-column:1/-1}
+  .lens-row{grid-template-columns:minmax(0,1fr) auto}
+  .lens-row .cells{grid-column:1/-1;grid-row:2}
+  .hdock .btn{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script type="module">
+(() => {
+"use strict";
+
+/* ===================== content ===================== */
+const EL = {
+  c:{name:"Credibility", gloss:"We know what we're talking about"},
+  r:{name:"Reliability", gloss:"We do what we say"},
+  i:{name:"Intimacy", gloss:"People feel safe bringing things to us"},
+  s:{name:"Low self-orientation", gloss:"We focus on the employee, not on ourselves"}
+};
+const CARDS = [
+  ["c1","c","We know the business, not just the policy."],
+  ["c2","c","Our advice is backed by data, not opinion."],
+  ["c3","c","We give a clear answer, not “it depends.”"],
+  ["c4","c","We bring a recommendation, not just a list of options."],
+  ["c5","c","We keep our expertise current, from labour law to AI."],
+  ["r1","r","We close every case on the date we promised."],
+  ["r2","r","Employees hear from us before they have to chase us."],
+  ["r3","r","The same question gets the same answer, whoever you ask in HR."],
+  ["r4","r","If we are going to miss a deadline, we say so before it passes."],
+  ["r5","r","Every request is acknowledged within one working day."],
+  ["i1","i","We listen to understand before we quote the policy."],
+  ["i2","i","Every case is a person, not a ticket."],
+  ["i3","i","What you tell us in confidence stays in confidence."],
+  ["i4","i","Employees can bring us bad news without fear."],
+  ["i5","i","We ask “how are you?” and wait for the real answer."],
+  ["s1","s","We say “let me find a way” before “that’s not possible.”"],
+  ["s2","s","We measure success by the employee’s outcome, not our process."],
+  ["s3","s","We change our process when it stops serving people."],
+  ["s4","s","We give the credit to managers and employees, not to HR."],
+  ["s5","s","We design every service from the employee’s side of the desk."]
+].map(([id,el,text]) => ({id,el,text}));
+
+/* ----- Trust scoring (HNI facilitation design, not a validated measure) -----
+   Each card is rated 0-3 on the four elements of the Trust Equation:
+   3 = the element the behaviour mainly builds (every card has exactly one),
+   2 = a strong secondary effect, 1 = a clear secondary effect, 0 = no direct effect.
+   For S the rating is how much the behaviour LOWERS self-orientation.
+   Card trust points = C + R + I + S.
+   Team trust score  = (sum C + sum R + sum I) / S_team,
+   where S_team = max(S_FLOOR, S_START - sum S). */
+const S_START = 10, S_FLOOR = 1;
+const WEIGHTS = {
+  c1:[3,0,0,1,"Knowing the business is the core of credibility. Looking past our own rulebook also lowers self-orientation."],
+  c2:[3,1,0,0,"Evidence is what makes expert advice believable. It also makes advice repeatable: the same facts give the same answer."],
+  c3:[3,0,0,1,"A clear answer shows command of the subject. Hedging protects HR, so dropping it also lowers self-orientation."],
+  c4:[3,0,0,0,"Offering a judgement, not just options, is expertise in action. A pure credibility behaviour."],
+  c5:[3,0,0,0,"Up-to-date knowledge is the base that credibility rests on."],
+  r1:[0,3,0,0,"Keeping a dated promise is the definition of reliability."],
+  r2:[0,3,0,1,"Proactive updates are dependable follow-through. Sparing the employee the chase also puts their time ahead of ours."],
+  r3:[1,3,0,0,"Consistency across the team is reliability. It also signals shared expertise."],
+  r4:[0,3,1,0,"Warning early protects the promise. Being candid about a slip also makes it safer to be open with us."],
+  r5:[0,3,0,0,"A fixed response standard is a small promise kept every time."],
+  i1:[0,0,3,2,"Listening first is the heart of intimacy. Putting the person before the policy lowers self-orientation strongly, so it scores 2 there."],
+  i2:[0,0,3,1,"Treating the case as a person builds safety. It also moves attention from our process to them."],
+  i3:[0,1,3,0,"Confidentiality is what makes people safe to speak. Keeping a confidence is also a kept promise."],
+  i4:[0,0,3,0,"Being able to raise bad news without fear is intimacy in its purest form."],
+  i5:[0,0,3,1,"Genuine interest builds closeness, and waiting for the answer keeps the focus on them, not on us."],
+  s1:[0,0,1,3,"Looking for a way to help puts the employee's goal first. It also tells them we're on their side."],
+  s2:[0,0,0,3,"Judging ourselves by the employee's outcome is the clearest shift away from self-orientation."],
+  s3:[0,0,0,3,"Changing our own process for people's sake puts them ahead of our comfort."],
+  s4:[0,0,0,3,"Giving the credit away removes our need to look good."],
+  s5:[0,0,1,3,"Designing from the employee's side keeps attention on them. It also needs real understanding of their experience."]
+};
+CARDS.forEach(c => { const w = WEIGHTS[c.id]; c.w = {c:w[0], r:w[1], i:w[2], s:w[3]}; c.why = w[4]; c.pts = w[0]+w[1]+w[2]+w[3]; });
+const CARD = Object.fromEntries(CARDS.map(c => [c.id,c]));
+function trustOf(ids){
+  const t = {c:0,r:0,i:0,s:0};
+  ids.forEach(id => { const c = CARD[id]; if (c) { t.c+=c.w.c; t.r+=c.w.r; t.i+=c.w.i; t.s+=c.w.s; } });
+  const N = t.c + t.r + t.i;
+  const S = Math.max(S_FLOOR, S_START - t.s);
+  return {c:t.c, r:t.r, i:t.i, sred:t.s, N, S, T: N / S, floored: S_START - t.s < S_FLOOR};
+}
+const fmtT = x => (Math.round(x*100)/100).toFixed(2);
+// Lots alternate colours so every element comes up early
+const ORDER = [];
+for (let n=1;n<=5;n++) for (const e of ["c","r","i","s"]) ORDER.push(e+n);
+const lotNo = id => String(ORDER.indexOf(id)+1).padStart(2,"0");
+const TEAM_IDS = ["t1","t2","t3","t4","t5"];
+const DEFAULTS = {budget:1000, opening:50, step:50, bonus:100, lotSeconds:60, strategyMin:5,
+  teams:["Wisdom","Collaboration","Innovation","Sustainability","Humanity"]};
+const PHASES = [["join","Join"],["rules","Rules"],["strategy","Strategy"],["auction","Auction"],["debrief","Debrief"],["vote","Dot vote"],["top5","Top 5"]];
+
+function freshState(settings, prev){
+  return {phase:"join", phaseAt:now(), round: prev ? (prev.round||0) : 0, roundNo:0, cardId:null, openedAt:0,
+    call:0, callHigh:0, sold:{}, unclaimed:[], lastSale:null,
+    voteRound: prev ? (prev.voteRound||1)+1 : 1, pitchAt:0,
+    settings: JSON.parse(JSON.stringify(settings || DEFAULTS))};
+}
+
+/* ===================== helpers ===================== */
+const $app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const fmt = n => Number(n||0).toLocaleString("en-US");
+const clone = o => JSON.parse(JSON.stringify(o));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { v===null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch(e){} };
+// The screen's role lives with the browser tab, so several tabs on one laptop can each be a different team.
+const roleKey = () => "la-role-" + (new URLSearchParams(location.search).get("game") || "hrx-offsite");
+const roleGet = () => { try { return sessionStorage.getItem(roleKey()); } catch(e){ return null; } };
+const roleSet = v => { try { v===null ? sessionStorage.removeItem(roleKey()) : sessionStorage.setItem(roleKey(), v); } catch(e){} };
+
+/* ===================== Firebase connection ===================== */
+// Your Firebase project. Web API keys are not secret; the database rules decide who can read and write.
+const FIREBASE_VERSION = "13.0.0";
+const firebaseConfig = {
+  apiKey: "AIzaSyCeXaIAma8uI1ED5v6SliLyX_aiTxHkR38",
+  authDomain: "leadership-auction.firebaseapp.com",
+  databaseURL: "https://leadership-auction-default-rtdb.firebaseio.com",
+  projectId: "leadership-auction",
+  storageBucket: "leadership-auction.firebasestorage.app",
+  messagingSenderId: "971684678095",
+  appId: "1:971684678095:web:7a225f3742e57d6f44eaba"
+};
+// One database path per game. Add ?game=rehearsal to the address for a separate practice game.
+const GAME = ((new URLSearchParams(location.search).get("game") || "hrx-offsite").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40)) || "hrx-offsite";
+const BASE = "games/" + GAME;
+
+/* ===================== store ===================== */
+// mode: "connecting" | "live" | "offline" (Firebase couldn't load: warn, never fall back silently) | "practice" (facilitator chose one screen)
+const store = {mode:"connecting", state:null, gotState:false, bids:{}, votes:{}, presence:{}, canWrite:true, error:"",
+  connected:false, everConnected:false, denied:false, stalled:false, writeFail:false, loadError:"",
+  netOnline: navigator.onLine !== false};
+let fb = null, fdb = null, serverOffset = 0, presRef = null;
+const CLIENT_ID = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+function now(){ return Date.now() + serverOffset; }   // server-aligned clock, so every screen's timers agree
+function stamp(){ return (store.mode==="live" && fb) ? fb.serverTimestamp() : now(); }
+
+function S(){ return store.state || freshState(DEFAULTS); }
+function teamName(t){ const st=S(); return (st.settings.teams||DEFAULTS.teams)[TEAM_IDS.indexOf(t)] || t; }
+function canSync(){ return store.mode==="practice" || (store.mode==="live" && store.connected && !store.denied); }
+
+/* Firebase drops empty arrays, empty objects and nulls; put the game's shape back. */
+const asList = v => Array.isArray(v) ? v.filter(x => x!=null) : (v && typeof v==="object") ? Object.values(v) : [];
+function normState(raw){
+  if (!raw || typeof raw!=="object") return null;
+  const st = Object.assign({}, raw);
+  st.phase = st.phase || "join";
+  ["phaseAt","round","roundNo","openedAt","call","callHigh","pitchAt"].forEach(k => { st[k] = Number(st[k]) || 0; });
+  st.voteRound = Number(st.voteRound) || 1;
+  st.cardId = st.cardId || null;
+  st.lastSale = st.lastSale || null;
+  if (st.lastSale && !st.lastSale.team) st.lastSale = Object.assign({}, st.lastSale, {team:null});
+  st.sold = (st.sold && typeof st.sold==="object") ? st.sold : {};
+  st.unclaimed = asList(st.unclaimed);
+  const s = Object.assign({}, DEFAULTS, st.settings || {});
+  const teams = asList((st.settings||{}).teams);
+  s.teams = DEFAULTS.teams.map((d,i) => teams[i] || d);
+  st.settings = s;
+  return st;
+}
+
+function applyLocal(path, data){
+  const [col,id] = path.split("/");
+  if (col==="state") { store.state = normState(data); store.gotState = true; }
+  else if (col==="bids") { if (!id) store.bids = data || {}; else if (data===null) delete store.bids[id]; else store.bids[id]=data; }
+  else if (col==="votes") { if (!id) store.votes = data || {}; else if (data===null) delete store.votes[id]; else store.votes[id]=data; }
+}
+/* Save one or more paths in a single all-or-nothing write.
+   Resolves true only after Firebase confirms, so screens never claim success for a change that didn't sync. */
+function commit(updates){
+  if (store.mode==="practice") { Object.entries(updates).forEach(([p,d]) => applyLocal(p, d)); scheduleRender(); return Promise.resolve(true); }
+  if (!canSync()) {
+    store.error = store.mode==="live"
+      ? "This screen isn't connected right now, so nothing was sent. Wait for the connection to come back, then tap again."
+      : "Not connected to the live game, so nothing was sent. See the warning above.";
+    scheduleRender(); return Promise.resolve(false);
+  }
+  let p;
+  try {
+    const keys = Object.keys(updates);
+    p = keys.length===1 ? fb.set(fb.ref(fdb, BASE + "/" + keys[0]), updates[keys[0]]) : fb.update(fb.ref(fdb, BASE), updates);
+  } catch(e) { onWriteError(e); return Promise.resolve(false); }
+  return p.then(() => { if (store.writeFail) { store.writeFail = false; scheduleRender(); } return true; })
+          .catch(e => { onWriteError(e); return false; });
+}
+function write(path, data){ return commit({[path]: data}); }
+/* Read-modify-write that can't lose a concurrent change (used for vote counts). */
+function txn(path, fn){
+  if (store.mode==="practice") { const [col,id] = path.split("/"); applyLocal(path, fn((store[col]||{})[id] || null)); scheduleRender(); return Promise.resolve(true); }
+  if (!canSync()) { store.error = "This screen isn't connected right now, so nothing was sent."; scheduleRender(); return Promise.resolve(false); }
+  return fb.runTransaction(fb.ref(fdb, BASE + "/" + path), fn).then(r => !!(r && r.committed)).catch(e => { onWriteError(e); return false; });
+}
+function isDenied(e){ return /permission/i.test(String((e && (e.code || e.message)) || "")); }
+function onWriteError(e){
+  store.writeFail = true;
+  if (isDenied(e)) { store.denied = true; store.canWrite = false; store.error = ""; }
+  else store.error = "A change didn't reach the other screens. Check the Wi-Fi and tap again.";
+  scheduleRender();
+}
+
+/* What's wrong with the link, in the room's words. null = all good. */
+function connIssue(){
+  if (store.mode==="connecting") return null;
+  if (store.mode==="offline") return {hard:true, title:"Can't load the live game.",
+    text:"This screen couldn't load Firebase, so it can't sync with the tablets. Check the internet connection and reload. If it keeps happening, the network may be blocking gstatic.com or firebaseio.com."};
+  if (store.mode==="practice") return {hard:false, title:"Practice mode: this screen only.",
+    text:"Nothing here reaches the tablets. Reload the page to connect to the live game."};
+  if (store.denied) return {hard:true, title:"Firebase refused access.",
+    text:"The database rules don't let this game read or write. Paste the rules from the setup notes into Realtime Database › Rules, publish them, then reload."};
+  if (!store.netOnline) return {hard:true, title:"This device is offline.", text:"Reconnect to Wi-Fi. Bidding is paused on this screen until it's back."};
+  if (store.everConnected && !store.connected) return {hard:true, title:"Connection lost. Reconnecting…",
+    text:"Bidding is paused on this screen until the connection is back. Coins and cards are safe in the database."};
+  if (!store.everConnected && store.stalled) return {hard:true, title:"Can't reach the live game.",
+    text:"No reply from Firebase after 10 seconds. Check the Wi-Fi, then reload."};
+  if (store.writeFail) return {hard:false, title:"Last change didn't sync.", text:"Check the Wi-Fi and tap again."};
+  return null;
+}
+
+/* who is connected right now: each screen marks itself present and Firebase removes the mark when it disconnects */
+function setPresence(){
+  if (store.mode!=="live" || !fb || !store.connected || !ui.role || store.denied) return;
+  const path = BASE + "/presence/" + ui.role + "/" + CLIENT_ID;
+  if (presRef && presRef._path === path) { fb.set(presRef.ref, true).catch(() => {}); return; }
+  clearPresence();
+  const r = fb.ref(fdb, path);
+  presRef = {ref:r, _path:path};
+  fb.onDisconnect(r).remove().catch(() => {});
+  fb.set(r, true).catch(() => {});
+}
+function clearPresence(){
+  if (!presRef || !fb) return;
+  const r = presRef.ref; presRef = null;
+  fb.onDisconnect(r).cancel().catch(() => {});
+  fb.remove(r).catch(() => {});
+}
+function ensureJoined(){
+  // mark a team tablet as joined once it can actually reach the game
+  if (!ui.role || ui.role==="host" || !canSync()) return;
+  const cur = store.bids[ui.role];
+  if (!cur) write("bids/"+ui.role, {round:-1, amount:0, at:now(), joined:true});
+  else if (!cur.joined) write("bids/"+ui.role, Object.assign({}, cur, {joined:true}));
+}
+function connectedTeams(){
+  const out = {};
+  for (const t of TEAM_IDS) { const p = store.presence[t]; if (p && typeof p==="object" && Object.keys(p).length) out[t] = Object.keys(p).length; }
+  return out;
+}
+
+async function init(){
+  render();
+  try {
+    const base = "https://www.gstatic.com/firebasejs/" + FIREBASE_VERSION + "/";
+    const [appMod, dbMod] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-database.js")]);
+    const app = appMod.initializeApp(firebaseConfig);
+    fdb = dbMod.getDatabase(app);
+    fb = dbMod;
+  } catch(e) {
+    store.mode = "offline"; store.loadError = String(e && e.message || e); render(); return;
+  }
+  store.mode = "live";
+  const onErr = e => { if (isDenied(e)) store.denied = true; else store.error = "Lost contact with the live game. Reload the page."; scheduleRender(); };
+  setTimeout(() => { if (!store.everConnected) { store.stalled = true; scheduleRender(); } }, 10000);
+  fb.onValue(fb.ref(fdb, ".info/serverTimeOffset"), s => { serverOffset = Number(s.val()) || 0; });
+  fb.onValue(fb.ref(fdb, ".info/connected"), s => {
+    store.connected = s.val() === true;
+    if (store.connected) { store.everConnected = true; store.stalled = false; setPresence(); setTimeout(ensureJoined, 300); }
+    scheduleRender();
+  });
+  fb.onValue(fb.ref(fdb, BASE + "/state"), s => { store.state = normState(s.val()); store.gotState = true; scheduleRender(); }, onErr);
+  fb.onValue(fb.ref(fdb, BASE + "/bids"), s => { store.bids = s.val() || {}; scheduleRender(); }, onErr);
+  fb.onValue(fb.ref(fdb, BASE + "/votes"), s => { store.votes = s.val() || {}; scheduleRender(); }, onErr);
+  fb.onValue(fb.ref(fdb, BASE + "/presence"), s => { store.presence = s.val() || {}; scheduleRender(); }, onErr);
+  render();
+}
+window.addEventListener("online", () => { store.netOnline = true; scheduleRender(); });
+window.addEventListener("offline", () => { store.netOnline = false; scheduleRender(); });
+
+/* ===================== game logic ===================== */
+function leader(){
+  const st = S(); let best = null;
+  for (const t of TEAM_IDS) {
+    const b = store.bids[t];
+    if (!b || b.round!==st.round || !(b.amount>0)) continue;
+    if (b.amount > left(t)) continue;
+    if (!best || b.amount>best.amount || (b.amount===best.amount && (b.at||0)<best.at)) best = {team:t, amount:b.amount, at:b.at||0};
+  }
+  return best;
+}
+function roundBids(){
+  const st = S();
+  return TEAM_IDS.map(t => ({team:t, b:store.bids[t]})).filter(x => x.b && x.b.round===st.round && x.b.amount>0 && x.b.amount<=left(x.team))
+    .sort((a,b) => b.b.amount-a.b.amount || (a.b.at||0)-(b.b.at||0));
+}
+function spent(t){ return Object.values(S().sold).filter(s => s.team===t).reduce((a,s) => a+s.price, 0); }
+function left(t){ return (S().settings.budget||0) - spent(t); }
+function owned(t){ return Object.entries(S().sold).filter(([,s]) => s.team===t).map(([id]) => CARD[id]).filter(Boolean); }
+function colourCount(t){ const o={c:0,r:0,i:0,s:0}; owned(t).forEach(c => o[c.el]++); return o; }
+function hasSet(t){ const o = colourCount(t); return o.c>0 && o.r>0 && o.i>0 && o.s>0; }
+function teamTrust(t){ return trustOf(owned(t).map(c => c.id)); }
+function trustIfWon(t, id){ return trustOf(owned(t).map(c => c.id).concat([id])); }
+function roomTrust(){ const xs = TEAM_IDS.map(t => teamTrust(t).T); return xs.reduce((a,b) => a+b, 0) / xs.length; }
+function started(){ return (S().roundNo||0) > 0; }
+function nextRoundNo(){ return (S().roundNo||0) + 1; }
+function nextLotId(){
+  const st = S();
+  return ORDER.find(id => !st.sold[id] && !st.unclaimed.includes(id) && !(st.phase==="bidding" && id===st.cardId)) || null;
+}
+function remainingLots(){ const st=S(); return ORDER.filter(id => !st.sold[id] && !st.unclaimed.includes(id)); }
+function voteCandidates(){
+  const sold = ORDER.filter(id => S().sold[id]);
+  return sold.length >= 5 ? sold : ORDER.slice();
+}
+function voteTotals(){
+  const st = S(); const tot = {}; let voters = 0;
+  for (const t of TEAM_IDS) {
+    const v = store.votes[t];
+    if (!v || v.voteRound!==st.voteRound) continue;
+    voters += v.voters||0;
+    for (const [id,n] of Object.entries(v.counts||{})) tot[id] = (tot[id]||0)+n;
+  }
+  const list = voteCandidates().map(id => ({id, n: tot[id]||0})).sort((a,b) => b.n-a.n || ORDER.indexOf(a.id)-ORDER.indexOf(b.id));
+  return {list, voters};
+}
+
+/* host actions */
+function hostWrite(mut){ const st = clone(S()); mut(st); write("state", st); }
+function setPhase(p){
+  if (p==="auction") { auctionTab(); return; }
+  hostWrite(st => { st.phase=p; st.phaseAt=now(); st.pitchAt=0; });
+}
+function auctionTab(){
+  const st = S();
+  if (st.phase==="bidding" || st.phase==="sold") return;
+  if (started()) hostWrite(s => { s.phase="sold"; s.phaseAt=now(); });
+  else hostWrite(s => { s.phase="ready"; s.phaseAt=now(); });
+}
+function openLot(id){
+  if (!id) { setPhase("debrief"); return; }
+  hostWrite(st => {
+    st.phase="bidding"; st.round=(st.round||0)+1; st.roundNo=(st.roundNo||0)+1; st.cardId=id; st.openedAt=now(); st.phaseAt=now();
+    st.call=0; st.callHigh=0; st.unclaimed = st.unclaimed.filter(x => x!==id); st.lastSale=null;
+  });
+  ui.drawer=null;
+}
+function callOut(n){ const L=leader(); hostWrite(st => { st.call=n; st.callHigh = L ? L.amount : 0; }); }
+function sell(){
+  const L = leader(); const st0 = S(); if (!st0.cardId) return;
+  if (!L) { noSale(); return; }
+  hostWrite(st => { st.sold[st.cardId] = {team:L.team, price:L.amount}; st.lastSale={cardId:st.cardId, team:L.team, price:L.amount}; st.phase="sold"; st.phaseAt=now(); st.call=0; });
+  sound("gavel");
+}
+function noSale(){
+  hostWrite(st => { if (!st.unclaimed.includes(st.cardId)) st.unclaimed.push(st.cardId); st.lastSale={cardId:st.cardId, team:null, price:0}; st.phase="sold"; st.phaseAt=now(); st.call=0; });
+  sound("thud");
+}
+function undoSale(){
+  hostWrite(st => {
+    const ls = st.lastSale; if (!ls) return;
+    delete st.sold[ls.cardId]; st.unclaimed = st.unclaimed.filter(x => x!==ls.cardId);
+    st.cardId = ls.cardId; st.lastSale=null; st.phase="bidding"; st.call=0; st.callHigh=0; st.phaseAt=now();
+  });
+}
+function placeBid(team, jump){
+  // unchanged rule: raise the current price by `jump`, never past the team's coins, never against yourself
+  const st = S(); if (st.phase!=="bidding") return Promise.resolve({ok:false, reason:"closed"});
+  const L = leader(); const step = st.settings.step||50;
+  if (L && L.team===team) return Promise.resolve({ok:false, reason:"leading"});
+  const amount = L ? L.amount + jump : (st.settings.opening||50) + (jump-step);
+  if (amount > left(team)) return Promise.resolve({ok:false, reason:"funds", amount});
+  return write("bids/"+team, {round:st.round, amount, at:stamp(), joined:true}).then(ok => ({ok, amount, reason: ok ? "" : "sync"}));
+}
+function resetGame(){
+  // one atomic write: either everything resets or nothing does
+  const prev = S();
+  const updates = {state: freshState(prev.settings, prev), votes: null};
+  for (const t of TEAM_IDS) if (store.bids[t]) updates["bids/"+t] = {round:-1, amount:0, at:0, joined:!!store.bids[t].joined};
+  ui.drawer = null;
+  return commit(updates);
+}
+function castVote(t, sel){
+  const vr = S().voteRound;
+  return txn("votes/"+t, cur => {
+    const same = cur && cur.voteRound===vr;
+    const counts = same ? Object.assign({}, cur.counts||{}) : {};
+    sel.forEach(id => { counts[id] = (counts[id]||0)+1; });
+    return {voteRound:vr, counts, voters:(same ? (cur.voters||0) : 0)+1};
+  });
+}
+
+/* ===================== local UI state ===================== */
+const ui = {
+  role: roleGet(),   // "host" | "t1".."t5" | null
+  drawer:null, menu:false, modal:null, manual:false, hostAsk:false, dtab:"money",
+  sound: lsGet("la-sound")!=="off",
+  vote: {sel:[], done:false, sending:false, error:""},
+  bid: null,          // {status:"sending"|"accepted"|"beaten"|"failed", amount, round, msg, at}
+  toasts: [],
+  lastHigh:0
+};
+function plan(team){ try { return JSON.parse(lsGet("la-plan-"+GAME+"-"+team)||"{}") || {}; } catch(e){ return {}; } }
+function savePlan(team,p){ lsSet("la-plan-"+GAME+"-"+team, JSON.stringify(p)); }
+let toastN = 0;
+function toast(kind, text){
+  const id = ++toastN; ui.toasts.push({id, kind, text}); if (ui.toasts.length > 3) ui.toasts.shift();
+  scheduleRender(); setTimeout(() => { ui.toasts = ui.toasts.filter(x => x.id !== id); scheduleRender(); }, 3600);
+}
+/* stop double clicks from firing an action twice (e.g. two rounds opening at once) */
+const lastFired = {};
+function once(key, ms){ const t = Date.now(); if (lastFired[key] && t - lastFired[key] < (ms||900)) return false; lastFired[key] = t; return true; }
+// The dock's main button changes in place (Sold → Start Round → …), so one double-click must not trigger two different steps.
+function dockOnce(){ const t = Date.now(); if (lastFired.dock && t - lastFired.dock < 700) return false; lastFired.dock = t; return true; }
+
+/* ===================== sound ===================== */
+let actx = null;
+function sound(kind){
+  if (!ui.sound || ui.role!=="host") return;
+  try {
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = "triangle";
+    const f = kind==="gavel" ? 150 : kind==="thud" ? 90 : 660;
+    o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f*0.5, t+0.18);
+    g.gain.setValueAtTime(kind==="bid"?0.08:0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t+(kind==="bid"?0.12:0.35));
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.4);
+    if (kind==="gavel") setTimeout(() => sound("thud"), 170);
+  } catch(e){}
+}
+
+/* ===================== phases ===================== */
+const STEPS = [["join","Join"],["rules","Rules"],["strategy","Strategy"],["auction","Auction"],["debrief","Debrief"],["vote","Dot vote"],["top5","Top 5"]];
+const stepKey = p => ["ready","bidding","sold"].includes(p) ? "auction" : p;
+const stepIdx = p => STEPS.findIndex(s => s[0]===stepKey(p));
+const GOALS = {
+  join:     {host:"Teams join on their phones or tablets. Move on when the paddles are up.", team:"You're in. The facilitator will start the game."},
+  rules:    {host:"Explain the Trust Equation and the four house rules.", team:"Here's how the auction works."},
+  strategy: {host:"Teams agree which cards they want and the most they'll pay.", team:"Agree which cards your team wants and the most you'll pay for each."},
+  auction:  {host:"One card per round. Teams bid on their tablets; you call each sale.", team:"Bid for the cards your team wants. Watch your coins."},
+  debrief:  {host:"Look at what the room bought, what it ignored, and what that says about trust.", team:"Get ready to pitch your best card in one minute."},
+  vote:     {host:"Everyone picks the 3 principles that matter most.", team:"Pass the tablet round. Each person picks 3 principles."},
+  top5:     {host:"The room's Top 5 principles, seen through the Trust Equation.", team:"The room chose these as its Top 5 HR principles."}
+};
+
+/* ===================== render ===================== */
+let renderQueued = false, renderDeferred = false, lastViewKey = "";
+// a timer, not requestAnimationFrame: background tabs pause animation frames and would miss live updates
+function scheduleRender(){ if (renderQueued) return; renderQueued = true; setTimeout(() => { renderQueued=false; render(); }, 16); }
+function typing(){ const a=document.activeElement; return a && $app.contains(a) && (a.tagName==="INPUT" || a.tagName==="TEXTAREA"); }
+document.addEventListener("focusout", () => { if (renderDeferred) { renderDeferred=false; setTimeout(scheduleRender, 0); } });
+
+let lastVoteRound = null;
+function render(){
+  const st0 = S();
+  if (lastVoteRound!==null && st0.voteRound!==lastVoteRound) ui.vote = {sel:[], done:false, sending:false, error:""};
+  lastVoteRound = st0.voteRound;
+  if (ui.bid && ui.bid.round!==st0.round) ui.bid = null;
+  // A new round or stage always reaches every screen, even mid-typing.
+  const viewKey = (ui.role||"-") + "|" + st0.phase + "|" + (st0.roundNo||0);
+  const stageChanged = viewKey !== lastViewKey;
+  if (typing() && !stageChanged) { renderDeferred = true; return; }
+  if (stageChanged && typing()) document.activeElement.blur();
+  const L = leader();
+  if (ui.role==="host" && st0.phase==="bidding" && L && L.amount>ui.lastHigh) sound("bid");
+  ui.lastHigh = (st0.phase==="bidding" && L) ? L.amount : 0;
+
+  let html;
+  if (store.mode==="connecting") html = `<div class="center"><div class="spinner" aria-hidden="true"></div><p class="muted">Connecting to the game…</p></div>`;
+  else if (!ui.role) html = startView();
+  else if (ui.role==="host") html = hostView();
+  else html = tabletView(ui.role);
+  html += modalView() + `<div class="toasts" role="status" aria-live="polite">${ui.toasts.map(x => `<div class="toast ${x.kind}">${esc(x.text)}</div>`).join("")}</div>`;
+  const hadModal = !!document.querySelector(".overlay");
+  $app.innerHTML = html;
+  if (ui.modal && !hadModal) { const f = document.querySelector(".modal [data-autofocus]"); if (f) f.focus(); }
+  if (stageChanged && lastViewKey && ui.role) { try { window.scrollTo(0,0); } catch(e){} }
+  lastViewKey = viewKey;
+  tick();
+}
+
+function gavelSvg(){ return `<svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><rect x="4" y="5" width="15" height="8" rx="2" transform="rotate(-35 11.5 9)"/><rect x="13.5" y="11" width="3.2" height="17" rx="1.6" transform="rotate(-35 15 19.5)"/><rect x="3" y="26" width="16" height="3" rx="1.5"/></svg>`; }
+
+/* ---------- connection & errors ---------- */
+function connState(){
+  if (store.mode==="practice") return {cls:"warn", text:"Practice mode"};
+  if (store.mode==="offline" || store.denied) return {cls:"err", text:"Not connected"};
+  if (store.mode==="connecting" || (store.mode==="live" && !store.everConnected)) return {cls:"warn", text:"Connecting…"};
+  if (!store.connected || !store.netOnline) return {cls:"err", text:"Reconnecting…"};
+  return {cls:"", text:"Live"};
+}
+function hostCount(){ const p = store.presence.host; return (p && typeof p==="object") ? Object.keys(p).length : 0; }
+function banners(){
+  let out = "";
+  const c = connIssue();
+  if (c) out += `<div class="notice ${c.hard?"err":"warn"}" role="${c.hard?"alert":"status"}"><b>${esc(c.title)}</b><span>${esc(c.text)}</span></div>`;
+  if (store.error) out += `<div class="notice err" role="alert"><span>${esc(store.error)}</span><span class="spacer"></span><button class="btn ghost" data-act="clear-error">Dismiss</button></div>`;
+  if (ui.role==="host" && store.mode==="live" && hostCount() > 1) out += `<div class="notice warn" role="status"><b>Another auctioneer screen is open.</b><span>Use only one console, or the two screens will overwrite each other's moves.</span></div>`;
+  return out;
+}
+function liveTablets(){
+  const now = connectedTeams();
+  return TEAM_IDS.map(t => ({team:t, now: !!now[t], joined: !!(store.bids[t] && store.bids[t].joined)}));
+}
+function tabletCount(){ return store.mode==="live" ? liveTablets().filter(x => x.now).length : 0; }
+function joinAddress(){ return (location.host + location.pathname).replace(/index\.html$/,"") + (GAME!=="hrx-offsite" ? "?game="+GAME : ""); }
+
+/* ---------- shared pieces ---------- */
+function weightChips(c, withPts){
+  const k = [["c","C"],["r","R"],["i","I"],["s","S−"]];
+  return `<span class="wts" aria-label="Trust ratings: credibility ${c.w.c}, reliability ${c.w.r}, intimacy ${c.w.i}, lowers self-orientation by ${c.w.s}">${k.map(([e,l]) => `<span class="wt wt-${e} ${c.w[e]?"on":""}">${l}${c.w[e]}</span>`).join("")}${withPts?`<span class="wt">${c.pts} pts</span>`:""}</span>`;
+}
+function methodHtml(compact){
+  return `<ol class="method">
+    <li>Each card is rated 0–3 on the four elements: <b>3</b> = the element it mainly builds (every card has exactly one), <b>2</b> = a strong secondary effect, <b>1</b> = a clear secondary effect, <b>0</b> = no direct effect. For self-orientation the rating is how much the behaviour <b>lowers</b> it.</li>
+    <li><b>Card trust points</b> = C + R + I + S−. Cards range from 3 to 5 points.</li>
+    <li><b>Team trust score</b> = (C + R + I) ÷ S. Every team starts with S = ${S_START}; each S− point lowers it by 1, down to a floor of ${S_FLOOR}. No cards = 0.</li>
+    ${compact ? "" : `<li>Because S is the divisor, a purple card adds little on its own but raises the value of every other card you own. Buying only purple cards stops paying off once S reaches ${S_FLOOR}, because you still need something on top of the line.</li>
+    <li><b>Room trust score</b> = the average of the five team scores.</li>`}
+  </ol>
+  <div class="formula">Trust = (C + R + I) ÷ S &nbsp;·&nbsp; S = max(${S_FLOOR}, ${S_START} − S−)</div>
+  <div class="caveat">These ratings are HNI's facilitation design for this game, based on our reading of the four trust elements in Maister, Green &amp; Galford (2000). They are not a validated measure of trust. Use them to start the conversation, and challenge any rating you disagree with in the debrief.</div>`;
+}
+function scoringDrawer(){
+  return `<section class="drawer" aria-label="Scoring guide"><div class="row"><h2>Scoring guide</h2><span class="spacer"></span><button class="btn" data-act="cancel">Close</button></div>
+    <div class="split"><div class="stack">${methodHtml(false)}</div>
+      <div class="stack"><p class="eyebrow">Worked example</p>
+        ${(() => { const ex = trustOf(["c1","r1","i1","s2"]); return `<p>A team owning Lots ${["c1","r1","i1","s2"].map(lotNo).join(", ")} has C ${ex.c} + R ${ex.r} + I ${ex.i} = ${ex.N} on top. S− totals ${ex.sred}, so S = ${S_START} − ${ex.sred} = ${ex.S}. Trust = ${ex.N} ÷ ${ex.S} = <b>${fmtT(ex.T)}</b>.</p>`; })()}
+        ${(() => { const ex = trustOf(["c1","c2","r1","r3"]); return `<p>Swap the orange and purple cards for two more blue and green ones: ${ex.N} ÷ ${ex.S} = <b>${fmtT(ex.T)}</b>. Same total card points, lower trust, because S stays high.</p>`; })()}
+      </div></div>
+    <div class="tablewrap"><table class="scores"><thead><tr><th>Lot</th><th>Behaviour</th><th>C</th><th>R</th><th>I</th><th>S−</th><th>Pts</th><th>Why this rating</th></tr></thead><tbody>
+      ${ORDER.map(id => { const c = CARD[id]; return `<tr class="el-${c.el}"><td class="num">${lotNo(id)}</td><td>${esc(c.text)}</td>${["c","r","i","s"].map(e => `<td class="n ${c.w[e]?"":"z"}">${c.w[e]}</td>`).join("")}<td class="n">${c.pts}</td><td class="why">${esc(c.why)}</td></tr>`; }).join("")}
+    </tbody></table></div>
+  </section>`;
+}
+function trustBreakdown(tt){ return `(${tt.c} + ${tt.r} + ${tt.i}) ÷ ${tt.S}`; }
+function equationHtml(){
+  return `<div class="equation" aria-label="Trust equals credibility plus reliability plus intimacy, divided by self-orientation">
+    <span>Trust =</span>
+    <span class="frac"><span><span class="eqc">C</span> + <span class="eqr">R</span> + <span class="eqi">I</span></span><span class="eqs">S</span></span>
+  </div>`;
+}
+function elementTiles(){
+  return `<div class="elements">${["c","r","i","s"].map(k => `<div class="eltile el-${k}"><b>${EL[k].name}</b><span>${EL[k].gloss}</span></div>`).join("")}</div>`;
+}
+function lotCard(id, extra){
+  const c = CARD[id]; if (!c) return "";
+  return `<article class="lot el-${c.el}" aria-label="Lot ${lotNo(id)}"><div class="band"></div>
+    <div class="body"><div class="meta"><span class="tag">${EL[c.el].name}</span><span class="lotno">Lot ${lotNo(id)} of 20 · ${c.pts} trust pts</span></div>
+      <p class="text">${esc(c.text)}</p><p class="gloss">${EL[c.el].gloss}</p>${extra||""}</div></article>`;
+}
+function catalogue(clickable){
+  const st = S();
+  return `<div class="catalogue">${["c","r","i","s"].map(k => `<div class="col el-${k}"><h3>${EL[k].name}</h3>${
+    CARDS.filter(c => c.el===k).map(c => {
+      const sold = st.sold[c.id]; const unc = st.unclaimed.includes(c.id); const cur = st.cardId===c.id && st.phase==="bidding";
+      const who = sold ? `Sold to ${esc(teamName(sold.team))} · ${fmt(sold.price)}` : unc ? "Unclaimed" : cur ? "On the block now" : "";
+      const tag = clickable ? "button" : "div";
+      const attrs = clickable ? `data-act="open-lot" data-card="${c.id}" ${sold||cur||!canSync()||st.phase==="bidding"?"disabled":""}` : "";
+      return `<${tag} class="mini el-${k} ${sold?"sold":""} ${unc?"unc":""}" ${attrs}><span>${esc(c.text)}</span><span class="who">Lot ${lotNo(c.id)} · ${c.pts} pts${who?` · ${who}`:""}</span></${tag}>`;
+    }).join("")}</div>`).join("")}</div>`;
+}
+function pipsHtml(t){
+  const cc = colourCount(t);
+  return `<span class="pips" aria-label="${["c","r","i","s"].map(k => cc[k]+" "+EL[k].name).join(", ")}">${["c","r","i","s"].map(k => `<span class="pip el-${k} ${cc[k]?"on":""}" title="${EL[k].name}">${cc[k]||""}</span>`).join("")}${hasSet(t)?`<span class="bonus">+${S().settings.bonus} IP</span>`:""}</span>`;
+}
+
+/* ---------- modal ---------- */
+function ask(kind, title, body, confirm, danger, data){ ui.modal = {kind, title, body, confirm, danger, data}; ui.menu = false; scheduleRender(); }
+function modalView(){
+  const m = ui.modal; if (!m) return "";
+  return `<div class="overlay" data-act="modal-cancel"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <h2 id="mt">${esc(m.title)}</h2><p class="muted">${esc(m.body)}</p>
+    <div class="actions"><button class="btn" data-act="modal-cancel" ${m.danger?"data-autofocus":""}>Cancel</button><button class="btn ${m.danger?"danger":"primary"}" data-act="modal-confirm" ${m.danger?"":"data-autofocus"}>${esc(m.confirm)}</button></div>
+  </div></div>`;
+}
+
+/* ===================== START ===================== */
+function startView(){
+  const st = S();
+  const offline = store.mode==="offline";
+  const lt = liveTablets();
+  return `<main class="start">
+    <div class="row"><div class="brand">${gavelSvg()} HR X Offsite</div><span class="spacer"></span><span class="pill"><span class="dot ${connState().cls}"></span>${esc(connState().text)}</span></div>
+    <div class="stack" style="gap:.6em"><h1>The Leadership Auction</h1>
+      <p class="lede">Five teams. ${fmt(st.settings.budget)} coins each. Twenty HR principles up for auction. Buy the ones your team believes in.</p></div>
+    ${banners()}
+    ${offline ? `<div class="notice info"><span>Rehearsing on your own?</span><button class="btn" data-act="practice">Practice on this screen only</button></div>` : ""}
+    <section class="stack" aria-labelledby="pickh">
+      <h2 id="pickh" style="font-size:1.25rem">Tap your team to join</h2>
+      <div class="teams">${TEAM_IDS.map((t,i) => { const x = lt[i]; return `<button class="teambtn" data-act="pick" data-team="${t}" ${offline?"disabled":""}>
+        <span class="n">Paddle ${i+1}</span><b>Team ${esc(teamName(t))}</b>
+        <span class="st">${offline ? "Needs the live game" : x.now ? `<span class="dot"></span>A device is connected` : "Not joined yet"}</span></button>`; }).join("")}</div>
+    </section>
+    <div class="facil">
+      <span class="muted">Facilitator? Open the console on the laptop connected to the projector.</span>
+      ${ui.hostAsk
+        ? `<div class="row"><span class="muted small">This screen will control the game for everyone.</span><button class="btn ghost" data-act="host-cancel">Cancel</button><button class="btn primary" data-act="be-host">Open the console</button></div>`
+        : `<button class="btn" data-act="host-ask">I'm the facilitator</button>`}
+    </div>
+    <p class="muted small">Game: ${esc(GAME)}</p>
+  </main>`;
+}
+
+/* ===================== FACILITATOR ===================== */
+function statusPill(){
+  const c = connState(); const n = tabletCount();
+  return `<span class="pill" title="Team devices connected right now"><span class="dot ${c.cls}"></span>${esc(c.text)}${store.mode==="live" && !c.cls ? ` · ${n}/5 teams` : ""}</span>`;
+}
+function hostView(){
+  const st = S(); const idx = stepIdx(st.phase); const sk = stepKey(st.phase);
+  const locked = st.phase==="bidding";
+  let content = "", dock = "";
+  const missing = store.mode==="live" && store.gotState && !store.state;
+  if (store.mode==="offline") {
+    content = `<section class="card stack"><h2>This screen can't reach the live game.</h2><p class="muted">Check the internet connection, then reload. To rehearse without tablets, use practice mode.</p><div class="row"><button class="btn" data-act="practice">Practice on this screen only</button></div></section>`;
+  } else if (store.mode==="live" && !store.gotState) {
+    content = `<div class="center"><div class="spinner" aria-hidden="true"></div><p class="muted">Loading the game…</p></div>`;
+  } else if (missing) {
+    content = `<section class="card stack"><h2>No game set up yet</h2><p class="muted">Create a fresh game. Teams can join as soon as it exists.</p></section>`;
+    dock = `<span class="spacer"></span><button class="btn primary lg" data-act="create">Set up a new game</button>`;
+  } else {
+    const v = ({join:hostJoin, rules:hostRules, strategy:hostStrategy, ready:hostReady, bidding:hostBidding, sold:hostSold, debrief:hostDebrief, vote:hostVote, top5:hostTop5})[st.phase] || hostJoin;
+    [content, dock] = v();
+  }
+  const round = ["ready","bidding","sold"].includes(st.phase) && started() ? ` · Round ${st.phase==="ready"?nextRoundNo():st.roundNo} of ${st.roundNo + remainingLots().length - (st.phase==="bidding"?1:0)}` : "";
+  return `<div class="host">
+    <header class="hbar">
+      <div class="brand">${gavelSvg()}<span>Leadership Auction</span></div>
+      <nav aria-label="Game stages"><ol class="steps">${STEPS.map(([k,l],i) => `<li><button data-act="goto" data-phase="${k}" ${k===sk?'aria-current="step"':""} class="${i<idx?"done":""}" ${locked && k!==sk ? `disabled title="Finish this round first"` : ""}><span class="k">${i<idx?"✓":i+1}</span><span class="t">${l}</span></button></li>`).join("")}</ol></nav>
+      <div class="tools">${statusPill()}
+        <button class="btn" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">Menu</button>
+        ${ui.menu ? `<div class="menu" role="menu">
+          <button role="menuitem" data-act="scoring">Scoring guide</button>
+          <button role="menuitem" data-act="lots">All 20 cards</button>
+          <button role="menuitem" data-act="sound"><span>Sound effects</span><span class="muted">${ui.sound?"On":"Off"}</span></button>
+          <button role="menuitem" data-act="switch-ask">Use this screen as a team</button>
+          <hr><button role="menuitem" class="danger" data-act="reset-ask">Reset the game…</button></div>` : ""}
+      </div>
+    </header>
+    <div class="hbanners">${banners()}</div>
+    <main class="hstage">
+      ${ui.drawer==="lots" ? `<section class="drawer" aria-label="All cards"><div class="row"><h2>All 20 cards</h2><span class="muted small">${st.phase==="bidding"?"Finish the current round to put a different card up.":"Tap a card to auction it in the next round. Unclaimed cards can go up again."}</span><span class="spacer"></span><button class="btn" data-act="cancel">Close</button></div>${catalogue(true)}</section>` : ""}
+      ${ui.drawer==="scoring" ? scoringDrawer() : ""}
+      ${store.state || store.mode==="practice" ? `<div class="phead"><span class="eyebrow">Step ${idx+1} of 7 · ${STEPS[idx][1]}${round}</span><h1>${hostTitle()}</h1><p>${GOALS[sk].host}</p></div>` : ""}
+      ${content}
+    </main>
+    ${dock ? `<footer class="hdock" aria-label="Facilitator controls">${dock}</footer>` : ""}
+  </div>`;
+}
+function hostTitle(){
+  const st = S();
+  return ({join:"Teams are joining", rules:"How the auction works", strategy:"Strategy time", ready:`Round ${nextRoundNo()} is next`,
+    bidding:"Bidding is open", sold: st.lastSale && st.lastSale.team ? "Sold" : "No sale", debrief:"Debrief", vote:"Dot vote", top5:"Top 5 HR principles"})[st.phase] || "";
+}
+function primaryStart(){
+  const nx = nextLotId(); const ok = canSync() && !!nx && store.canWrite;
+  return nx ? `<button class="btn primary lg" data-act="start-round" ${ok?"":"disabled"}>Start Round ${nextRoundNo()}</button>`
+            : `<button class="btn primary lg" data-act="next" data-phase="debrief" ${canSync()?"":"disabled"}>Go to the debrief</button>`;
+}
+
+function hostJoin(){
+  const s = S().settings; const lt = liveTablets(); const lockedSet = started();
+  const content = `<div class="split">
+    <section class="card stack">
+      <p class="eyebrow">On every team phone or tablet</p>
+      <p class="joinurl">${esc(joinAddress())}</p>
+      <p class="muted">Open this address, then tap the team name. Each team lights up below when its device connects.</p>
+      <div class="slots">${TEAM_IDS.map((t,i) => { const x = lt[i]; const on = x.now; return `<div class="slot ${on?"on":""}"><span class="muted small">Paddle ${i+1}</span><b>${esc(teamName(t))}</b><span class="st">${store.mode==="practice" ? "Console bids" : on ? `<span class="dot"></span>Connected` : x.joined ? "Disconnected" : "Waiting…"}</span></div>`; }).join("")}</div>
+    </section>
+    <details class="settings" ${lockedSet?"":"open"}>
+      <summary>Game settings${lockedSet?" · locked during play":""}</summary>
+      <div class="inner">
+        ${lockedSet ? `<div class="notice info">Settings are locked once Round 1 starts, so balances can't change mid-game. Reset the game to edit them.</div>` : ""}
+        <div class="fields">${TEAM_IDS.map((t,i) => `<label class="field" for="tn-${t}">Team ${i+1} name<input id="tn-${t}" data-set="team" data-i="${i}" value="${esc(s.teams[i])}" maxlength="24" ${lockedSet?"disabled":""}></label>`).join("")}</div>
+        <div class="fields">
+          <label class="field" for="set-budget">Coins per team<input id="set-budget" type="number" min="100" step="50" data-set="budget" value="${s.budget}" ${lockedSet?"disabled":""}></label>
+          <label class="field" for="set-opening">Opening bid<input id="set-opening" type="number" min="10" step="10" data-set="opening" value="${s.opening}" ${lockedSet?"disabled":""}></label>
+          <label class="field" for="set-step">Bid step<input id="set-step" type="number" min="10" step="10" data-set="step" value="${s.step}" ${lockedSet?"disabled":""}></label>
+          <label class="field" for="set-bonus">Colour-set bonus (IP)<input id="set-bonus" type="number" min="0" step="10" data-set="bonus" value="${s.bonus}" ${lockedSet?"disabled":""}></label>
+          <label class="field" for="set-lot">Seconds per round<input id="set-lot" type="number" min="15" step="5" data-set="lotSeconds" value="${s.lotSeconds}" ${lockedSet?"disabled":""}></label>
+          <label class="field" for="set-strat">Strategy minutes<input id="set-strat" type="number" min="1" step="1" data-set="strategyMin" value="${s.strategyMin}" ${lockedSet?"disabled":""}></label>
+        </div>
+        ${lockedSet ? "" : `<p class="muted small">Changes save when you leave a field.</p>`}
+      </div>
+    </details>
+  </div>`;
+  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected</div><span class="spacer"></span>
+    <button class="btn primary lg" data-act="next" data-phase="rules">Show the rules</button>`;
+  return [content, dock];
+}
+
+function houseRules(){
+  const s = S().settings;
+  return `<div class="rules">
+    <div class="rule"><span class="k num">${fmt(s.budget)}</span><b>Coins per team</b><span>Spend them on the principles your team believes in. Coins don't carry over.</span></div>
+    <div class="rule"><span class="k num">+${fmt(s.step)}</span><b>Each bid raises the price by ${fmt(s.step)}</b><span>Bidding opens at ${fmt(s.opening)}. Tap Bid on your tablet; the highest bid when the gavel falls wins.</span></div>
+    <div class="rule"><span class="k num">20</span><b>One card per round</b><span>About ${s.lotSeconds} seconds each. If no one bids, the card goes to the Unclaimed board.</span></div>
+    <div class="rule"><span class="k num">+${fmt(s.bonus)}</span><b>Collect all four colours</b><span>Own at least one card of every colour and your team earns ${fmt(s.bonus)} Innovation Points.</span></div>
+  </div>`;
+}
+function hostRules(){
+  const s = S().settings;
+  const content = `<div class="split">
+    <section class="card stack"><p class="eyebrow">The Trust Equation</p>${equationHtml()}${elementTiles()}
+      <p class="muted">The lower the self-orientation, the higher the trust. Purple cards are the ones that lower it.</p>
+      <p class="source">Maister, D. H., Green, C. H., &amp; Galford, R. M. (2000). <i>The Trusted Advisor</i>. Free Press.</p></section>
+    <section class="stack"><p class="eyebrow">House rules</p>${houseRules()}</section>
+  </div>`;
+  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected</div><span class="spacer"></span>
+    <button class="btn primary lg" data-act="next" data-phase="strategy">Start the ${s.strategyMin}-minute strategy</button>`;
+  return [content, dock];
+}
+function hostStrategy(){
+  const st = S(); const end = st.phaseAt + st.settings.strategyMin*60000;
+  const content = `<div class="row" style="align-items:flex-end"><p class="muted" style="max-width:60ch">Teams mark the cards they want on their tablets. Each card's colour shows the trust element it builds.</p><span class="spacer"></span>
+      <div style="text-align:right"><div class="big num" style="font-size:3em" data-countdown="${end}">--:--</div><span class="muted small">planning time left</span></div></div>
+    ${catalogue(false)}`;
+  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected · every connected tablet switches to Round 1 when you start</div><span class="spacer"></span>${primaryStart()}`;
+  return [content, dock];
+}
+function hostReady(){
+  const nx = nextLotId(); const c = nx && CARD[nx];
+  const content = `<section class="ready"><span class="eyebrow">Up next</span><div class="big num">Round ${nextRoundNo()}</div>
+    ${c ? `<p class="leadline">Lot ${lotNo(nx)} · <span class="el-${c.el}" style="color:var(--el)">${EL[c.el].name}</span></p><p class="muted">The card is revealed on every screen when you start the round.</p>` : `<p class="leadline">Every card has been auctioned.</p>`}
+  </section>${scoreboard()}`;
+  const dock = `<div class="ctx">${tabletCount()} of 5 teams connected</div><span class="spacer"></span>${primaryStart()}`;
+  return [content, dock];
+}
+function nextBidAmount(){ const st = S(); const L = leader(); return L ? L.amount + st.settings.step : st.settings.opening; }
+function hostBidding(){
+  const st = S(); const L = leader(); const bids = roundBids();
+  const callShown = st.call && (!L || L.amount <= st.callHigh);
+  const end = st.openedAt + st.settings.lotSeconds*1000;
+  const content = `<div class="auction">
+    ${lotCard(st.cardId)}
+    <section class="bidbox" aria-live="polite">
+      <div><p class="eyebrow">${L ? "Current bid" : "Opening bid"}</p>
+        <div class="big num">${fmt(L ? L.amount : st.settings.opening)}<small>COINS</small></div></div>
+      <p class="leadline ${L?"":"none"}">${L ? `Team ${esc(teamName(L.team))} leads` : "Waiting for the first bid"}</p>
+      ${callShown ? `<div><span class="call">${st.call===1?"Going once…":"Going twice…"}</span></div>` : `<p class="muted">Next bid: <b class="num">${fmt(nextBidAmount())}</b></p>`}
+      <div class="clock" data-timer-end="${end}" data-timer-len="${st.settings.lotSeconds*1000}"><div class="lbl"><span data-clock-label>Round clock</span><b class="num" data-countdown="${end}">--:--</b></div><div class="track"><div class="fill"></div></div></div>
+      ${bids.length ? `<ol class="history" aria-label="Bids this round">${bids.slice(0,3).map(x => `<li><span>${esc(teamName(x.team))}</span><span class="num">${fmt(x.b.amount)}</span></li>`).join("")}</ol>` : ""}
+      ${ui.manual ? `<div class="stack" style="gap:.5em"><p class="eyebrow">Enter a bid for a team (paddle raised in the room)</p><div class="row">${TEAM_IDS.map(t => { const can = !(L && L.team===t) && nextBidAmount() <= left(t) && canSync(); return `<button class="btn" data-act="bid-for" data-team="${t}" ${can?"":"disabled"}>${esc(teamName(t))} → ${fmt(nextBidAmount())}</button>`; }).join("")}</div></div>` : ""}
+    </section>
+  </div>${scoreboard()}`;
+  const dock = `<div class="grp"><button class="btn" data-act="call" data-n="1" ${L?"":"disabled"}>Going once</button><button class="btn" data-act="call" data-n="2" ${L?"":"disabled"}>Going twice</button></div>
+    <div class="grp"><button class="btn ghost" data-act="manual" aria-expanded="${ui.manual}">${ui.manual?"Hide manual bids":"Manual bid"}</button></div>
+    <span class="spacer"></span>
+    <button class="btn danger-ghost" data-act="nosale-ask">${L ? "Withdraw card" : "No bids · move to Unclaimed"}</button>
+    <button class="btn primary lg" data-act="sell" ${L && canSync() ? "" : "disabled"}>${L ? `Sold to ${esc(teamName(L.team))} · ${fmt(L.amount)}` : "Sold (waiting for a bid)"}</button>`;
+  return [content, dock];
+}
+function hostSold(){
+  const st = S(); const ls = st.lastSale; const nx = nextLotId(); const rem = remainingLots().length;
+  let body = "";
+  if (ls && CARD[ls.cardId]) {
+    const c = CARD[ls.cardId];
+    body = ls.team
+      ? `<div class="stamp">SOLD</div><p class="leadline">Team ${esc(teamName(ls.team))} pays <span class="num">${fmt(ls.price)}</span> coins · <span class="num">${fmt(left(ls.team))}</span> left</p>`
+      : `<div class="stamp none">UNCLAIMED</div><p class="leadline none">Nobody bid. The card moves to the Unclaimed board for the debrief.</p>`;
+    body += `<p class="what"><span class="tag el-${c.el}">${EL[c.el].name}</span><br>${esc(c.text)}</p>`;
+  } else body = `<p class="leadline">${rem} cards still to auction.</p>`;
+  const content = `<section class="result">${body}<p class="muted small">${Object.keys(st.sold).length} sold · ${st.unclaimed.length} unclaimed · ${rem} to go</p></section>${scoreboard()}`;
+  const dock = `<div class="grp">${ls ? `<button class="btn ghost" data-act="undo-ask">Undo this result</button>` : ""}${nx ? `<button class="btn ghost" data-act="end-ask">End the auction now</button>` : ""}</div>
+    <span class="spacer"></span>${primaryStart()}`;
+  return [content, dock];
+}
+function scoreboard(){
+  const st = S(); const L = st.phase==="bidding" ? leader() : null;
+  return `<section class="score" aria-label="Team budgets">${TEAM_IDS.map(t => `<div class="team ${L&&L.team===t?"lead":""}">
+    <span class="tn">${esc(teamName(t))}</span>
+    <span><span class="coins num">${fmt(left(t))}</span> <span class="lbl">coins left</span></span>
+    ${pipsHtml(t)}
+  </div>`).join("")}</section>`;
+}
+
+/* ---------- debrief ---------- */
+function spendByElement(){
+  const per = {c:0,r:0,i:0,s:0};
+  for (const [id,s] of Object.entries(S().sold)) if (CARD[id]) per[CARD[id].el] += s.price;
+  return per;
+}
+function debriefInsights(){
+  const per = spendByElement(); const total = Object.values(per).reduce((a,b) => a+b, 0);
+  const out = [];
+  if (!total) return [{b:"No cards were sold.", s:"Run the auction first, or talk about why nobody bid."}];
+  const ranked = Object.entries(per).sort((a,b) => b[1]-a[1]);
+  const pct = v => Math.round(v/total*100);
+  out.push({b:`${EL[ranked[0][0]].name} took ${pct(ranked[0][1])}% of the coins.`, s:`${EL[ranked[3][0]].name} got ${pct(ranked[3][1])}%. What does that say about where HR invests?`});
+  const tt = TEAM_IDS.map(t => ({t, T:teamTrust(t).T, spent:spent(t), purple:colourCount(t).s>0}));
+  const withP = tt.filter(x => x.purple), withoutP = tt.filter(x => !x.purple && x.spent>0);
+  const avg = xs => xs.length ? xs.reduce((a,x) => a+x.T, 0)/xs.length : 0;
+  if (!withP.length) out.push({b:"No team bought a purple card.", s:"Self-orientation is the divisor, so every trust score stayed low."});
+  else out.push({b:`${withP.length} of 5 teams bought a purple card.`, s: withoutP.length ? `Their average trust score: ${fmtT(avg(withP))}, against ${fmtT(avg(withoutP))} for the others.` : `Average trust score: ${fmtT(avg(withP))}.`});
+  const topSpend = [...tt].sort((a,b) => b.spent-a.spent)[0], topTrust = [...tt].sort((a,b) => b.T-a.T)[0];
+  if (topSpend.t===topTrust.t) out.push({b:`Team ${teamName(topSpend.t)} spent the most and built the most trust.`, s:`${fmt(topSpend.spent)} coins, trust score ${fmtT(topSpend.T)}.`});
+  else out.push({b:`Spending most didn't build the most trust.`, s:`Team ${teamName(topSpend.t)} spent ${fmt(topSpend.spent)}. Team ${teamName(topTrust.t)} built the most trust (${fmtT(topTrust.T)}).`});
+  return out;
+}
+function stackBar(tt){
+  const max = 15; // scale for the C, R, I parts
+  const seg = (v,col) => v ? `<i style="width:${Math.min(100, v/max*100).toFixed(1)}%;background:var(--${col})"></i>` : "";
+  return `<div class="stackbar" aria-hidden="true">${seg(tt.c,"c")}${seg(tt.r,"r")}${seg(tt.i,"i")}</div>`;
+}
+function hostDebrief(){
+  const st = S(); const per = spendByElement(); const max = Math.max(1, ...Object.values(per));
+  const tabs = [["money","Where the money went"],["trust","Trust scores"],["pitch","Team pitches"]];
+  let body = "";
+  if (ui.dtab==="money") {
+    const unc = [...st.unclaimed, ...remainingLots()];
+    body = `<div class="split">
+      <section class="card stack"><p class="eyebrow">Coins spent on each trust element</p>
+        <div class="bars">${["c","r","i","s"].map(k => `<div class="bar-row el-${k}"><span class="lbl">${EL[k].name}</span><div class="trk"><div class="fil" style="width:${(per[k]/max*100).toFixed(1)}%"></div></div><span class="val num">${fmt(per[k])}</span></div>`).join("")}</div>
+        <p class="question">Which trust element did this room invest in most? Which did it neglect?</p></section>
+      <section class="card stack"><p class="eyebrow">Unclaimed · ${unc.length} cards nobody paid for</p>
+        <div class="stack" style="gap:.4em">${unc.map(id => { const c=CARD[id]; return `<div class="mini el-${c.el} unc"><span>${esc(c.text)}</span></div>`; }).join("") || `<p class="muted">Every card found a buyer.</p>`}</div>
+        ${unc.length ? `<p class="question">Nobody paid for these. Is that what employees experience from us?</p>` : ""}</section>
+    </div>`;
+  } else if (ui.dtab==="trust") {
+    const tr = TEAM_IDS.map(t => ({t, tt: teamTrust(t)})).sort((a,b) => b.tt.T-a.tt.T);
+    body = `<div class="split">
+      <section class="card stack">
+        <div class="row"><p class="eyebrow">Team trust scores · (C + R + I) ÷ S</p><span class="spacer"></span><span class="muted small">Room average <b class="num">${fmtT(roomTrust())}</b></span></div>
+        <div class="legend"><span><i style="background:var(--c)"></i>Credibility</span><span><i style="background:var(--r)"></i>Reliability</span><span><i style="background:var(--i)"></i>Intimacy</span><span>÷ S (lower is better)</span></div>
+        <div class="rank">${tr.map((x,i) => `<div class="rank-row ${i===0&&x.tt.T>0?"first":""}"><span class="rk">${i+1}</span>
+          <span><b>${esc(teamName(x.t))}</b><br><span class="sub num">${fmt(spent(x.t))} coins · ${owned(x.t).length} ${owned(x.t).length===1?"card":"cards"}</span></span>
+          <span class="stackwrap">${stackBar(x.tt)}<span class="sub num">C+R+I = ${x.tt.N} · S = ${x.tt.S}${x.tt.floored?" (floor)":""}</span></span>
+          <span class="tv num">${fmtT(x.tt.T)}</span></div>`).join("")}</div>
+        <p class="question">Did the team that spent the most build the most trust? What did the purple cards do?</p>
+      </section>
+      <div class="stack">
+        <details class="how"><summary>How trust was scored</summary><div class="inner">${methodHtml(false)}<button class="btn" data-act="scoring">See all 20 card ratings</button></div></details>
+        <section class="card stack"><p class="eyebrow">Challenge the ratings</p><p class="muted">The ratings are HNI's game design, not a validated measure. Which card would your team rate differently, and why?</p></section>
+      </div>
+    </div>`;
+  } else {
+    const pitchEnd = st.pitchAt ? st.pitchAt + 60000 : 0;
+    body = `<section class="card stack">
+      <div class="row"><p class="question" style="flex:1">Which card was most worth the money, and where will you use it in a real HR situation next month?</p>
+        ${pitchEnd ? `<b class="big num" style="font-size:2.4em" data-countdown="${pitchEnd}">1:00</b>` : ""}
+        <button class="btn" data-act="pitch">${pitchEnd?"Restart":"Start"} 1-minute timer</button></div>
+      <div class="holdings">${TEAM_IDS.map(t => { const cs = owned(t); return `<div class="holding"><b>${esc(teamName(t))}</b>${pipsHtml(t)}<span class="muted small num">${fmt(spent(t))} spent · trust ${fmtT(teamTrust(t).T)}</span>${cs.map(c => `<div class="mini el-${c.el}"><span>${esc(c.text)}</span><span class="who num">${fmt(st.sold[c.id].price)} coins</span></div>`).join("") || `<span class="muted small">No cards</span>`}</div>`; }).join("")}</div>
+    </section>`;
+  }
+  const content = `<section class="insights" aria-label="Key insights">${debriefInsights().map(x => `<div class="insight"><b>${esc(x.b)}</b><span>${esc(x.s)}</span></div>`).join("")}</section>
+    <div class="seg" role="tablist">${tabs.map(([k,l],i) => `<button role="tab" aria-selected="${ui.dtab===k}" data-act="dtab" data-tab="${k}">${i+1}. ${l}</button>`).join("")}</div>
+    ${body}`;
+  const dock = `<div class="ctx">Work through the three tabs, then run the vote.</div><span class="spacer"></span>
+    <button class="btn primary lg" data-act="next" data-phase="vote">Open the dot vote</button>`;
+  return [content, dock];
+}
+
+/* ---------- vote & top 5 ---------- */
+function hostVote(){
+  const {list, voters} = voteTotals();
+  const max = Math.max(1, ...list.map(x => x.n));
+  const per = TEAM_IDS.map(t => { const v = store.votes[t]; return (v && v.voteRound===S().voteRound) ? (v.voters||0) : 0; });
+  const content = `<div class="split">
+    <section class="card stack"><p class="eyebrow">Live tally · dots per principle</p>
+      <div class="tally">${list.map(x => { const c=CARD[x.id]; return `<div class="t el-${c.el}"><span>${esc(c.text)}</span><span class="n num">${x.n}</span><div class="trk"><div class="fil" style="width:${(x.n/max*100).toFixed(1)}%"></div></div></div>`; }).join("")}</div></section>
+    <section class="card stack"><p class="eyebrow">People who have voted</p><div class="big num">${voters}</div>
+      <p class="muted">Each team passes its tablet from person to person. Everyone picks 3 principles from the cards that were bought.</p>
+      <div class="row">${TEAM_IDS.map((t,i) => `<span class="pill">${esc(teamName(t))} · <span class="num">${per[i]}</span></span>`).join("")}</div></section>
+  </div>`;
+  const dock = `<div class="grp"><button class="btn danger-ghost" data-act="revote-ask">Clear all votes</button></div><span class="spacer"></span>
+    <button class="btn primary lg" data-act="next" data-phase="top5" ${voters?"":"disabled"}>${voters?"Reveal the Top 5":"Reveal the Top 5 (waiting for votes)"}</button>`;
+  return [content, dock];
+}
+function top5List(){
+  const {list} = voteTotals();
+  const top = list.slice(0,5);
+  const tie = list.length>5 && list[5].n===list[4].n && list[4].n>0;
+  return {top, tie};
+}
+function top5Lens(top){
+  // how many of the Top 5 build each element: full = main element (3) or strong (2), half = clear secondary (1)
+  const rows = ["c","r","i","s"].map(k => {
+    const cells = top.map(x => { const w = CARD[x.id].w[k]; return w>=2 ? "on" : w===1 ? "half" : ""; });
+    return {k, cells, n: cells.filter(Boolean).length, main: cells.filter(c => c==="on").length};
+  });
+  const strong = [...rows].sort((a,b) => b.main-a.main || b.n-a.n)[0];
+  const weak = rows.filter(r => r.n===0);
+  const tt = trustOf(top.map(x => x.id));
+  let insight = `Your Top 5 leans most on ${EL[strong.k].name.toLowerCase()}.`;
+  if (weak.length) insight += ` None of them builds ${weak.map(r => EL[r.k].name.toLowerCase()).join(" or ")}.`;
+  if (strong.k==="s") insight = "Your Top 5 leans most on low self-orientation, which multiplies the value of everything else." + (weak.length ? ` None of them builds ${weak.map(r => EL[r.k].name.toLowerCase()).join(" or ")}.` : "");
+  else if (rows[3].n===0) insight += " With nothing lowering self-orientation, the divisor stays high.";
+  else if (rows[3].main>=2) insight += " Several also lower self-orientation, which multiplies the value of the rest.";
+  return `<section class="card stack"><p class="eyebrow">Through the Trust Equation</p>${equationHtml()}
+    <div class="lens">${rows.map(r => `<div class="lens-row el-${r.k}"><span class="lbl">${EL[r.k].name}</span><span class="cells" aria-label="${r.n} of ${top.length} principles">${r.cells.map(c => `<i class="${c}"></i>`).join("")}</span><span class="num muted small">${r.n} of ${top.length}</span></div>`).join("")}</div>
+    <p class="muted small">Solid = the principle's main or strong effect. Outlined = a secondary effect.</p>
+    <p><b>${esc(insight)}</b></p>
+    <p class="muted num">As a set, these five score ${trustBreakdown(tt)} = <b>${fmtT(tt.T)}</b>.</p>
+    <p class="question">Which of these will employees notice first? Which element would you add to make the set stronger?</p>
+  </section>`;
+}
+function hostTop5(){
+  const {top, tie} = top5List();
+  const content = `<div class="split">
+    <section class="stack"><div class="top5">${top.map((x,i) => { const c=CARD[x.id]; return `<div class="top el-${c.el}" style="animation-delay:${i*0.1}s"><span class="rk">${i+1}</span><span><span class="t">${esc(c.text)}</span><br><span class="tag">${EL[c.el].name}</span></span><span class="d num">${x.n} dots</span></div>`; }).join("")}</div>
+      ${tie ? `<div class="notice warn">There's a tie for fifth place. Settle it with a show of hands.</div>` : ""}
+      <p class="muted">These five move to the Legacy Wall.</p></section>
+    ${top.length ? top5Lens(top) : ""}
+  </div>`;
+  const dock = `<button class="btn ghost" data-act="next" data-phase="vote">Back to the vote</button><span class="spacer"></span>
+    <button class="btn" data-act="next" data-phase="debrief">Back to the debrief</button>`;
+  return [content, dock];
+}
+
+/* ===================== PARTICIPANT ===================== */
+function tabletView(t){
+  const st = S(); const idx = stepIdx(st.phase); const sk = stepKey(st.phase);
+  const c = connState(); const L = leader(); const myLeft = left(t);
+  let bidStat;
+  if (st.phase==="bidding") {
+    const mine = L && L.team===t;
+    bidStat = `<div class="stat ${mine?"lead":""}"><span class="l">Current bid</span><span class="v num">${L ? fmt(L.amount) : "—"}</span><span class="s">${L ? (mine ? "Your team leads" : `${esc(teamName(L.team))} leads`) : `Opens at ${fmt(st.settings.opening)}`}</span></div>`;
+  } else if (st.phase==="sold" && st.lastSale) {
+    bidStat = `<div class="stat"><span class="l">Last card</span><span class="v num">${st.lastSale.team ? fmt(st.lastSale.price) : "—"}</span><span class="s">${st.lastSale.team ? (st.lastSale.team===t ? "Won by your team" : `Won by ${esc(teamName(st.lastSale.team))}`) : "Unclaimed"}</span></div>`;
+  } else {
+    const n = owned(t).length; const cc = colourCount(t); const cols = ["c","r","i","s"].filter(k => cc[k]).length;
+    bidStat = `<div class="stat"><span class="l">Cards won</span><span class="v num">${n}</span><span class="s">${cols} of 4 colours${hasSet(t)?` · +${st.settings.bonus} IP`:""}</span></div>`;
+  }
+  const head = `<header class="tbar">
+    <div class="tb-row"><span class="tn"><span class="paddle">${TEAM_IDS.indexOf(t)+1}</span><span>Team ${esc(teamName(t))}</span></span>
+      <span class="conn"><span class="dot ${c.cls}"></span>${esc(c.text)}</span></div>
+    <div class="stats"><div class="stat"><span class="l">Coins left</span><span class="v num">${fmt(myLeft)}</span><span class="s">of ${fmt(st.settings.budget)}</span></div>${bidStat}</div>
+  </header>`;
+  let body;
+  const notReady = store.mode==="live" && !store.gotState;
+  if (store.mode==="offline") body = `<div class="status no"><span class="ic">!</span><span>This device can't reach the game.<small>Check the Wi-Fi and reload the page.</small></span></div>`;
+  else if (notReady) body = `<div class="center"><div class="spinner" aria-hidden="true"></div><p class="muted">Loading the game…</p></div>`;
+  else if (store.mode==="live" && !store.state) body = `<div class="status idle"><span class="ic">…</span><span>Waiting for the facilitator to open the game.</span></div>`;
+  else body = ({join:tabletJoin, rules:tabletRules, strategy:tabletPlan, ready:tabletReady, bidding:tabletBid, sold:tabletSold, debrief:tabletDebrief, vote:tabletVote, top5:tabletTop5})[st.phase](t);
+  const round = st.phase==="bidding"||st.phase==="sold" ? ` · Round ${st.roundNo}` : "";
+  return `<div class="tab">${head}
+    <main class="tmain">
+      <div class="progress"><div class="lbl"><span>Step ${idx+1} of 7 · ${STEPS[idx][1]}${round}</span></div><div class="trk"><div class="fil" style="width:${((idx+1)/7*100).toFixed(0)}%"></div></div></div>
+      <p class="goal">${GOALS[sk].team}</p>
+      ${banners()}
+      ${body}
+    </main>
+    <div class="tfoot"><button class="link" data-act="leave-ask">Not Team ${esc(teamName(t))}? Change team</button></div>
+  </div>`;
+}
+function howItWorks(){
+  const s = S().settings;
+  return `<section class="card stack"><p class="eyebrow">How it works</p>
+    <div class="rules" style="grid-template-columns:1fr">
+      <div class="rule"><span class="k num">${fmt(s.budget)}</span><b>Your team's coins</b><span>Always shown at the top of this screen.</span></div>
+      <div class="rule"><span class="k num">+${fmt(s.step)}</span><b>Tap Bid to raise the price</b><span>The highest bid when the gavel falls wins the card.</span></div>
+      <div class="rule"><span class="k num">+${fmt(s.bonus)}</span><b>Collect all four colours</b><span>One card of every colour earns ${fmt(s.bonus)} Innovation Points.</span></div>
+    </div></section>`;
+}
+function tabletJoin(){ return `<div class="status lead"><span class="ic">✓</span><span>You're connected.<small>This screen changes on its own when the game starts.</small></span></div>${howItWorks()}`; }
+function tabletRules(){
+  return `<section class="card stack"><p class="eyebrow">The Trust Equation</p>${equationHtml()}${elementTiles()}
+    <p class="muted small">The lower the self-orientation, the higher the trust. You'll see your team's trust score in the debrief.</p></section>${howItWorks()}`;
+}
+function tabletReady(){
+  return `<div class="center"><span class="eyebrow">Get ready</span><div class="big num" style="font-size:3.4em">Round ${nextRoundNo()}</div><p class="muted">The next card appears here as soon as the facilitator starts the round.</p></div>`;
+}
+function tabletPlan(t){
+  const p = plan(t); const st = S();
+  const wants = Object.entries(p).filter(([id,v]) => v && v.want && CARD[id]);
+  const total = wants.reduce((a,[,v]) => a+(Number(v.max)||0), 0);
+  const cols = new Set(wants.map(([id]) => CARD[id].el));
+  const over = total > left(t);
+  return `${started() ? "" : `<div class="status idle"><span class="ic">…</span><span>Round 1 starts when the facilitator is ready.<small>This screen switches on its own.</small></span></div>`}
+    <div class="status ${over?"no":"idle"}"><span class="ic">${wants.length}</span><span><span class="num">${fmt(total)}</span> of <span class="num">${fmt(left(t))}</span> coins planned<small>${wants.length} cards · ${cols.size} of 4 colours${over?" · over budget":""}</small></span></div>
+    <p class="muted small">Tick the cards you want and set the most you'll pay. Only your team sees this plan.</p>
+    ${["c","r","i","s"].map(k => `<section class="stack el-${k}" style="gap:.5em"><h3 style="color:var(--el);font-size:1em">${EL[k].name}</h3>${CARDS.filter(c => c.el===k).map(c => { const v = p[c.id]||{}; const sold = st.sold[c.id]; return `<div class="planrow el-${k} ${v.want?"on":""}">
+      <button class="chk" data-act="want" data-card="${c.id}" aria-pressed="${!!v.want}" aria-label="Want this card">${v.want?"✓":""}</button>
+      <span class="txt">${esc(c.text)}<br><span class="pts">Lot ${lotNo(c.id)} · ${c.pts} trust pts${sold?` · sold to ${esc(teamName(sold.team))}`:""}</span></span>
+      ${v.want ? `<label class="max" for="max-${c.id}">Top price<input id="max-${c.id}" type="number" inputmode="numeric" min="0" step="${st.settings.step}" placeholder="e.g. ${fmt(st.settings.opening*4)}" data-plan="${c.id}" value="${v.max||""}"></label>` : ""}
+    </div>`; }).join("")}</section>`).join("")}`;
+}
+function tabletBid(t){
+  const st = S(); const L = leader(); const step = st.settings.step; const myLeft = left(t);
+  const leading = L && L.team===t;
+  const next = L ? L.amount + step : st.settings.opening;
+  const blocked = !canSync() || (store.mode==="live" && !store.canWrite);
+  const pending = ui.bid && ui.bid.status==="sending" && ui.bid.round===st.round;
+  const callShown = st.call && (!L || L.amount <= st.callHigh);
+  const pl = plan(t)[st.cardId];
+  let status;
+  if (blocked) status = `<div class="status no"><span class="ic">!</span><span>Bidding paused<small>Waiting for the connection to come back.</small></span></div>`;
+  else if (leading) status = `<div class="status lead"><span class="ic">✓</span><span>You're leading at <span class="num">${fmt(L.amount)}</span><small>If another team bids, you can raise again.</small></span></div>`;
+  else if (next > myLeft) status = `<div class="status no"><span class="ic">!</span><span>Not enough coins<small>The next bid is ${fmt(next)}. Your team has ${fmt(myLeft)}.</small></span></div>`;
+  else if (L) status = `<div class="status out"><span class="ic">↑</span><span>Team ${esc(teamName(L.team))} leads at <span class="num">${fmt(L.amount)}</span><small>Bid ${fmt(next)} to take the lead.</small></span></div>`;
+  else status = `<div class="status idle"><span class="ic">•</span><span>No bids yet<small>Open the bidding at ${fmt(next)}.</small></span></div>`;
+  const can = amt => !leading && !blocked && !pending && amt <= myLeft;
+  const jumps = [next + step, next + step*3];
+  let fb = "";
+  if (ui.bid && ui.bid.round===st.round) {
+    const b = ui.bid;
+    if (b.status==="sending") fb = `<div class="feedback wait" role="status">${Date.now()-b.at > 5000 ? "Still waiting for confirmation. Check the Wi-Fi." : `Sending your bid of ${fmt(b.amount)}…`}</div>`;
+    else if (b.status==="accepted") fb = `<div class="feedback ok" role="status">✓ Bid of ${fmt(b.amount)} accepted.</div>`;
+    else if (b.status==="beaten") fb = `<div class="feedback err" role="status">Your ${fmt(b.amount)} arrived just after Team ${esc(teamName(b.by))}'s bid.</div>`;
+    else if (b.status==="failed") fb = `<div class="feedback err" role="alert">${esc(b.msg)}</div>`;
+  }
+  return `${lotCard(st.cardId, pl && pl.want ? `<p class="pts" style="color:var(--accent-ink)">On your team's list${pl.max?` · top price ${fmt(pl.max)}`:""}</p>` : "")}
+    ${callShown ? `<div class="status no" role="alert"><span class="ic">!</span><span>${st.call===1?"Going once…":"Going twice…"}<small>Bid now or the card is sold.</small></span></div>` : ""}
+    ${status}
+    <div class="bidarea">
+      <button class="btn primary bidmain ${pending?"busy":""}" data-act="bid" data-amount="${next}" ${can(next)?"":"disabled"} aria-busy="${!!pending}">
+        <span>Bid ${fmt(next)}</span><span class="sub">${L ? `+${fmt(step)}` : "opening bid"} · leaves you ${fmt(Math.max(0, myLeft-next))}</span></button>
+      <div class="jumps">${jumps.map(a => `<button class="btn" data-act="bid" data-amount="${a}" ${can(a)?"":"disabled"}>Jump to ${fmt(a)}</button>`).join("")}</div>
+      ${fb}
+    </div>`;
+}
+function tabletSold(t){
+  const st = S(); const ls = st.lastSale;
+  if (!ls || !CARD[ls.cardId]) return `<div class="status idle"><span class="ic">…</span><span>Waiting for Round ${nextRoundNo()}.</span></div>`;
+  let msg;
+  if (!ls.team) msg = `<div class="status idle"><span class="ic">–</span><span>No bids on this card<small>It goes to the Unclaimed board for the debrief.</small></span></div>`;
+  else if (ls.team===t) msg = `<div class="status lead"><span class="ic">✓</span><span>Your team won it for <span class="num">${fmt(ls.price)}</span><small>${fmt(left(t))} coins left.</small></span></div>`;
+  else msg = `<div class="status idle"><span class="ic">–</span><span>Sold to Team ${esc(teamName(ls.team))} for <span class="num">${fmt(ls.price)}</span><small>Your coins are unchanged: ${fmt(left(t))}.</small></span></div>`;
+  return `${msg}${lotCard(ls.cardId)}<p class="muted" style="text-align:center">${nextLotId() ? `Next: Round ${nextRoundNo()}. This screen changes on its own.` : "That was the last card."}</p>`;
+}
+function tabletDebrief(t){
+  const st = S(); const cs = owned(t); const tt = teamTrust(t);
+  return `<section class="card stack"><p class="eyebrow">Your team's trust score</p>
+      <div class="row"><span class="big num" style="font-size:2.6em">${fmtT(tt.T)}</span><span class="muted num">= ${trustBreakdown(tt)}</span></div>
+      ${stackBar(tt)}
+      <div class="legend"><span><i style="background:var(--c)"></i>C ${tt.c}</span><span><i style="background:var(--r)"></i>R ${tt.r}</span><span><i style="background:var(--i)"></i>I ${tt.i}</span><span>S ${tt.S}</span></div>
+      <details class="how"><summary>How this was scored</summary><div class="inner">${methodHtml(true)}</div></details>
+    </section>
+    <section class="stack" style="gap:.5em"><p class="eyebrow">Your cards · ${fmt(spent(t))} coins spent</p>
+      ${cs.map(c => `<div class="mini el-${c.el}"><span>${esc(c.text)}</span><span class="who">${EL[c.el].name} · ${fmt(st.sold[c.id].price)} coins</span>${weightChips(c,true)}</div>`).join("") || `<p class="muted">Your team didn't buy any cards.</p>`}</section>
+    <p class="question">For your 1-minute pitch: which card was most worth the money, and where will you use it next month?</p>`;
+}
+function tabletVote(t){
+  const st = S(); const cands = voteCandidates(); const need = Math.min(3, cands.length);
+  const v = store.votes[t]; const mine = (v && v.voteRound===st.voteRound) ? (v.voters||0) : 0;
+  if (ui.vote.done) return `<section class="done"><div class="check">✓</div><h2>Your ${need} dots are saved.</h2><p class="muted">${mine} ${mine===1?"person has":"people have"} voted on this tablet. Hand it to the next person.</p><button class="btn primary lg" data-act="next-voter">I'm the next voter</button></section>`;
+  const blocked = !canSync();
+  return `<p class="muted">Tap ${need} principles, then cast your dots. ${mine} ${mine===1?"person has":"people have"} voted on this tablet.</p>
+    <div class="stack" style="gap:.55em">${cands.map(id => { const c=CARD[id]; const i = ui.vote.sel.indexOf(id); const on = i>=0; return `<button class="votecard el-${c.el}" data-act="pick-vote" data-card="${id}" aria-pressed="${on}"><span class="vdot">${on?i+1:""}</span><span class="vt">${esc(c.text)}</span></button>`; }).join("")}</div>
+    ${ui.vote.error ? `<div class="feedback err" role="alert">${esc(ui.vote.error)}</div>` : ""}
+    <div class="sticky-cta"><button class="btn primary lg block ${ui.vote.sending?"busy":""}" data-act="cast" ${ui.vote.sel.length===need && !ui.vote.sending && !blocked ? "" : "disabled"}>${ui.vote.sel.length===need ? `Cast my ${need} dots` : `Choose ${need - ui.vote.sel.length} more`}</button></div>`;
+}
+function tabletTop5(){
+  const {top} = top5List();
+  return `<div class="top5">${top.map((x,i) => { const c=CARD[x.id]; return `<div class="top el-${c.el}"><span class="rk">${i+1}</span><span><span class="t">${esc(c.text)}</span><br><span class="tag">${EL[c.el].name}</span></span><span class="d num">${x.n}</span></div>`; }).join("")}</div>
+    ${top.length ? top5Lens(top) : ""}`;
+}
+
+/* ===================== timers (display only) ===================== */
+function tick(){
+  const tnow = now();
+  document.querySelectorAll("[data-countdown]").forEach(el => {
+    const ms = Number(el.dataset.countdown) - tnow; const s = Math.max(0, Math.ceil(ms/1000));
+    el.textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+    el.classList.toggle("late", ms<=0);
+  });
+  document.querySelectorAll("[data-timer-end]").forEach(el => {
+    const len = Number(el.dataset.timerLen); const ms = Number(el.dataset.timerEnd) - tnow;
+    const f = el.querySelector(".fill"); if (f) f.style.width = Math.max(0, Math.min(100, ms/len*100)) + "%";
+    el.classList.toggle("over", ms<=0);
+    const lab = el.querySelector("[data-clock-label]"); if (lab) lab.textContent = ms<=0 ? "Time's up · call it" : "Round clock";
+  });
+}
+setInterval(tick, 250);
+// re-render a pending bid after 5 s so "still waiting" appears
+setInterval(() => { if (ui.bid && ui.bid.status==="sending" && Date.now()-ui.bid.at > 5000 && !ui.bid.slow) { ui.bid.slow = true; scheduleRender(); } }, 1000);
+
+/* ===================== actions ===================== */
+function doBid(team, amount){
+  const st = S(); const L = leader(); const step = st.settings.step;
+  if (ui.bid && ui.bid.status==="sending") return;
+  if (L && amount <= L.amount) {   // the price moved between seeing the button and tapping it
+    ui.bid = {status:"failed", amount, round:st.round, at:Date.now(), msg:`Not sent: the price just moved to ${fmt(L.amount)}. Check the new bid and tap again.`};
+    scheduleRender(); return;
+  }
+  // the app keeps the original bid rule: raise the current price by one step or a jump of whole steps
+  const base = L ? L.amount : st.settings.opening - step;
+  const jump = amount - base;
+  ui.bid = {status:"sending", amount, round:st.round, at:Date.now()};
+  scheduleRender();
+  placeBid(team, jump).then(res => {
+    if (!ui.bid || ui.bid.round!==st.round) return;
+    if (!res.ok) {
+      const msg = res.reason==="funds" ? `Not sent: you need ${fmt(res.amount)} coins and have ${fmt(left(team))}.`
+        : res.reason==="leading" ? "Not sent: your team is already leading."
+        : res.reason==="closed" ? "Not sent: bidding on this card has closed."
+        : "Not sent. Check the connection and tap again.";
+      ui.bid = {status:"failed", amount, round:st.round, msg, at:Date.now()};
+    } else {
+      const L2 = leader();
+      if (L2 && L2.team===team && L2.amount===res.amount) ui.bid = {status:"accepted", amount:res.amount, round:st.round, at:Date.now()};
+      else ui.bid = {status:"beaten", amount:res.amount, round:st.round, by: L2 ? L2.team : null, at:Date.now()};
+    }
+    const keep = ui.bid; setTimeout(() => { if (ui.bid===keep) { ui.bid = null; scheduleRender(); } }, 4000);
+    scheduleRender();
+  });
+}
+function doCast(t){
+  if (ui.vote.sending) return;
+  const sel = ui.vote.sel.slice();
+  ui.vote.sending = true; ui.vote.error = ""; scheduleRender();
+  castVote(t, sel).then(ok => {
+    ui.vote.sending = false;
+    if (ok) ui.vote = {sel:[], done:true, sending:false, error:""};
+    else ui.vote.error = "Your dots weren't saved. Check the connection and tap again.";
+    scheduleRender();
+  });
+}
+function leaveRole(){ ui.role = null; roleSet(null); ui.drawer=null; ui.menu=false; ui.manual=false; clearPresence(); }
+function runModal(){
+  const m = ui.modal; ui.modal = null; if (!m) return;
+  switch (m.kind) {
+    case "reset": resetGame().then(ok => toast(ok?"ok":"err", ok ? "Game reset. Ready for Round 1." : "Reset didn't go through. Nothing was changed.")); break;
+    case "undo": undoSale(); toast("", "Result undone. Bidding is open again."); break;
+    case "end": setPhase("debrief"); break;
+    case "goto": setPhase(m.data); break;
+    case "nosale": noSale(); break;
+    case "revote": hostWrite(st => { st.voteRound = (st.voteRound||1)+1; }); toast("", "All votes cleared."); break;
+    case "leave": leaveRole(); break;
+  }
+}
+
+/* ===================== events ===================== */
+$app.addEventListener("click", e => {
+  if (ui.menu && !e.target.closest(".menu") && !e.target.closest('[data-act="menu"]')) { ui.menu = false; scheduleRender(); }
+  const b = e.target.closest("[data-act]"); if (!b || b.disabled) return;
+  if (b.classList.contains("overlay") && e.target!==b) return; // clicks inside the dialog
+  const a = b.dataset.act;
+  const team = ui.role && ui.role!=="host" ? ui.role : null;
+  const st = S();
+  switch (a) {
+    case "pick": ui.role = b.dataset.team; roleSet(ui.role); ui.vote={sel:[],done:false,sending:false,error:""}; ui.bid=null; ensureJoined(); setPresence(); wake(); break;
+    case "host-ask": ui.hostAsk = true; break;
+    case "host-cancel": ui.hostAsk = false; break;
+    case "be-host":
+      ui.role = "host"; roleSet("host"); ui.hostAsk=false;
+      if (store.mode==="live" && store.gotState && !store.state) write("state", freshState(DEFAULTS));
+      setPresence(); wake(); break;
+    case "create": if (once(a)) write("state", freshState(DEFAULTS)); break;
+    case "practice": store.mode = "practice"; store.state = freshState(DEFAULTS); store.gotState = true; store.error = ""; break;
+    case "clear-error": store.error = ""; break;
+    case "menu": ui.menu = !ui.menu; break;
+    case "scoring": ui.drawer = ui.drawer==="scoring" ? null : "scoring"; ui.menu=false; break;
+    case "lots": ui.drawer = ui.drawer==="lots" ? null : "lots"; ui.menu=false; break;
+    case "cancel": ui.drawer=null; break;
+    case "sound": ui.sound = !ui.sound; lsSet("la-sound", ui.sound?"on":"off"); break;
+    case "switch-ask": ask("leave", "Use this screen as a team?", "The game keeps running. You can reopen the console from the start screen.", "Leave the console", false); break;
+    case "leave-ask": ask("leave", `Leave Team ${teamName(team)}?`, "You'll go back to the team list. Your team's coins and cards stay as they are.", "Change team", false); break;
+    case "reset-ask": ask("reset", "Reset the whole game?", "This clears every sale, bid, vote and round for all teams. Team names and settings stay. It can't be undone.", "Reset the game", true); break;
+    case "undo-ask": { const ls = st.lastSale; if (!ls) break;
+      ask("undo", "Undo this result?", ls.team ? `Team ${teamName(ls.team)} gets its ${fmt(ls.price)} coins back and bidding on this card reopens.` : "The card leaves the Unclaimed board and bidding reopens.", "Undo the result", false); break; }
+    case "end-ask": ask("end", "End the auction now?", `${remainingLots().length} cards haven't been auctioned. They'll show as unclaimed in the debrief.`, "End the auction", true); break;
+    case "nosale-ask": { const L = leader();
+      if (!L) { if (once(a)) noSale(); break; }
+      ask("nosale", "Withdraw this card?", `Team ${teamName(L.team)}'s bid of ${fmt(L.amount)} is cancelled and the card goes to the Unclaimed board.`, "Withdraw the card", true); break; }
+    case "revote-ask": ask("revote", "Clear all votes?", "Every dot cast so far is removed and voting starts again on all tablets.", "Clear all votes", true); break;
+    case "modal-confirm": if (once(a, 600)) { lastFired.dock = Date.now(); runModal(); } break;
+    case "modal-cancel": ui.modal = null; break;
+    case "goto": {
+      const p = b.dataset.phase; if (stepKey(st.phase)===p) break;
+      if (st.phase==="bidding") break;
+      const label = STEPS.find(s => s[0]===p)[1];
+      ask("goto", `Move everyone to ${label}?`, "Every team screen switches to this stage straight away.", `Go to ${label}`, false, p); break; }
+    case "next": if (dockOnce(a)) setPhase(b.dataset.phase); break;
+    case "start-round": if (dockOnce(a)) { const n = nextRoundNo(); openLot(nextLotId()); toast("", `Round ${n} is open.`); } break;
+    case "open-lot": if (dockOnce("start-round")) openLot(b.dataset.card); break;
+    case "call": if (once(a, 500)) callOut(Number(b.dataset.n)); break;
+    case "sell": if (dockOnce(a)) { const L = leader(); sell(); if (L) toast("ok", `Sold to ${teamName(L.team)} for ${fmt(L.amount)}.`); } break;
+    case "manual": ui.manual = !ui.manual; break;
+    case "bid-for": if (once("bidfor", 400)) placeBid(b.dataset.team, st.settings.step); break;
+    case "pitch": if (once(a)) hostWrite(s2 => { s2.pitchAt = now(); }); break;
+    case "dtab": ui.dtab = b.dataset.tab; break;
+    case "bid": if (team) doBid(team, Number(b.dataset.amount)); break;
+    case "want": if (team) { const p = plan(team); const id=b.dataset.card; p[id] = Object.assign({}, p[id], {want: !(p[id]&&p[id].want)}); savePlan(team,p); } break;
+    case "pick-vote": {
+      const id = b.dataset.card; const need = Math.min(3, voteCandidates().length);
+      const i = ui.vote.sel.indexOf(id);
+      if (i>=0) ui.vote.sel.splice(i,1); else if (ui.vote.sel.length<need) ui.vote.sel.push(id);
+      ui.vote.error = ""; break;
+    }
+    case "cast": if (team) doCast(team); break;
+    case "next-voter": ui.vote = {sel:[], done:false, sending:false, error:""}; break;
+  }
+  scheduleRender();
+});
+$app.addEventListener("change", e => {
+  const el = e.target;
+  if (el.dataset.set) {
+    if (started()) return;
+    const key = el.dataset.set;
+    hostWrite(st => {
+      if (key==="team") { const name = el.value.trim(); if (name) st.settings.teams[Number(el.dataset.i)] = name; }
+      else { const n = Math.round(Number(el.value)); if (n>0) st.settings[key] = n; }
+    });
+  } else if (el.dataset.plan && ui.role && ui.role!=="host") {
+    const p = plan(ui.role); const id = el.dataset.plan; const n = Math.max(0, Math.round(Number(el.value)||0));
+    p[id] = Object.assign({}, p[id], {max:n, want: n>0 ? true : !!(p[id]&&p[id].want)}); savePlan(ui.role, p);
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.key!=="Escape") return;
+  if (ui.modal) ui.modal = null; else if (ui.menu) ui.menu = false; else if (ui.drawer) ui.drawer = null; else return;
+  scheduleRender();
+});
+
+/* keep tablets and the projector awake */
+let lock = null;
+async function wake(){ try { if (navigator.wakeLock && !lock) { lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock=null; }); } } catch(e){} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState==="visible" && ui.role) wake(); });
+
+init();
+})();
+</script>
+
+</body>
+</html>
