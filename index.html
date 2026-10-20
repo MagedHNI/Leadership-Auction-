@@ -195,11 +195,13 @@ details.settings .inner{padding:0 1.1em 1.1em;display:grid;gap:.9em}
 .field input:disabled{background:var(--sunk);color:var(--ink-3)}
 
 .joinbox{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1.2em;align-items:center}
-.qr{display:block;width:12em;height:12em;max-width:100%;border-radius:var(--rad-sm);border:1px solid var(--line);background:#fff}
+.qr{display:block;width:13em;height:13em;max-width:100%;border-radius:var(--rad-sm);border:1px solid var(--line);background:#fff}
 .teamfields{grid-template-columns:repeat(auto-fit,minmax(13em,1fr))}
 .teamfield .cb-row{display:flex;gap:.4em}
 .teamfield input{flex:1 1 0;min-width:0}
 .xbtn{min-height:44px;min-width:44px;padding:0;font-size:1.2em;line-height:1}
+.qrmodal{width:min(92vw,86vh);max-width:none;justify-items:center}
+.qrmodal .qr{width:min(80vw,70vh);height:min(80vw,70vh);border:0}
 @media (max-width:560px){ .joinbox{grid-template-columns:minmax(0,1fr)} .qr{width:100%;height:auto;max-width:16em} }
 /* rules */
 .rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7em}
@@ -727,16 +729,26 @@ function connIssue(){
 }
 
 /* who is connected right now: each screen marks itself present and Firebase removes the mark when it disconnects */
+/* Each screen writes its server time every HEARTBEAT_MS. A device counts as connected only if it checked in
+   within PRESENCE_FRESH_MS, so a phone that was closed, locked or lost Wi-Fi drops off even when Firebase
+   never saw the connection close. */
+const HEARTBEAT_MS = 15000, PRESENCE_FRESH_MS = 45000, PRESENCE_PRUNE_MS = 120000;
 function setPresence(){
   if (store.mode!=="live" || !fb || !store.connected || !ui.role || store.denied) return;
+  if (document.visibilityState==="hidden") return;
   const path = BASE + "/presence/" + ui.role + "/" + CLIENT_ID;
-  if (presRef && presRef._path === path) { fb.set(presRef.ref, true).catch(() => {}); return; }
+  if (presRef && presRef._path === path) { fb.onDisconnect(presRef.ref).remove().catch(() => {}); fb.set(presRef.ref, fb.serverTimestamp()).catch(() => {}); return; }
   clearPresence();
   const r = fb.ref(fdb, path);
   presRef = {ref:r, _path:path};
   fb.onDisconnect(r).remove().catch(() => {});
-  fb.set(r, true).catch(() => {});
+  fb.set(r, fb.serverTimestamp()).catch(() => {});
 }
+function dropPresenceMark(){   // tab hidden or closing: take this device off the list now, keep presRef to come back
+  if (!presRef || !fb || store.mode!=="live") return;
+  try { fb.remove(presRef.ref).catch(() => {}); } catch(e){}
+}
+const isFresh = v => typeof v==="number" && now() - v < PRESENCE_FRESH_MS;
 function clearPresence(){
   if (!presRef || !fb) return;
   const r = presRef.ref; presRef = null;
@@ -752,7 +764,7 @@ function ensureJoined(){
 }
 function connectedTeams(){
   const out = {};
-  for (const t of teamIds()) { const p = store.presence[t]; if (p && typeof p==="object" && Object.keys(p).length) out[t] = Object.keys(p).length; }
+  for (const t of teamIds()) { const p = store.presence[t]; if (p && typeof p==="object") { const n = Object.values(p).filter(isFresh).length; if (n) out[t] = n; } }
   return out;
 }
 
@@ -1022,7 +1034,7 @@ function render(){
   html += modalView() + `<div class="toasts" role="status" aria-live="polite">${ui.toasts.map(x => `<div class="toast ${x.kind}">${esc(x.text)}</div>`).join("")}</div>`;
   const hadModal = !!document.querySelector(".overlay");
   $app.innerHTML = html;
-  if (ui.modal && !hadModal) { const f = document.querySelector(".modal [data-autofocus]"); if (f) f.focus(); }
+  if ((ui.modal || ui.qrBig) && !hadModal) { const f = document.querySelector(".modal [data-autofocus]"); if (f) f.focus(); }
   if (keepCaret) { const el = document.getElementById("custom-bid");
     if (el && !el.disabled && !ui.modal) { el.value = ui.customBid; el.focus(); try { el.setSelectionRange(keepCaret[0], keepCaret[1]); } catch(e){} } }
   if (stageChanged && lastViewKey && ui.role) { try { window.scrollTo(0,0); } catch(e){} }
@@ -1040,7 +1052,7 @@ function connState(){
   if (!store.connected || !store.netOnline) return {cls:"err", text:"Reconnecting…"};
   return {cls:"", text:"Live"};
 }
-function hostCount(){ const p = store.presence.host; return (p && typeof p==="object") ? Object.keys(p).length : 0; }
+function hostCount(){ const p = store.presence.host; return (p && typeof p==="object") ? Object.values(p).filter(isFresh).length : 0; }
 function banners(){
   let out = "";
   const c = connIssue();
@@ -1055,10 +1067,12 @@ function liveTablets(){
 }
 function tabletCount(){ return store.mode==="live" ? liveTablets().filter(x => x.now).length : 0; }
 function joinLinkText(){ const j = (S().settings.joinLink || "").trim(); return j || joinAddress(); }
-function joinLinkUrl(){   // what the QR code opens: the custom link (https:// added if missing) or this page's own address
+function joinLinkUrl(){
+  // The QR opens this page's own address directly: no link shortener in between, which venue or company Wi-Fi often blocks.
+  // Only when the console isn't running from a web address (e.g. a file on the laptop) does it fall back to the custom link.
+  if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname.replace(/index\.html$/,"") + (GAME!=="hrx-offsite" ? "?game="+GAME : "");
   const j = (S().settings.joinLink || "").trim();
-  if (j) return /^[a-z][a-z0-9+.-]*:/i.test(j) ? j : "https://" + j;
-  return location.origin + location.pathname.replace(/index\.html$/,"") + (GAME!=="hrx-offsite" ? "?game="+GAME : "");
+  return j ? (/^[a-z][a-z0-9+.-]*:/i.test(j) ? j : "https://" + j) : "";
 }
 function joinAddress(){ return (location.host + location.pathname).replace(/index\.html$/,"") + (GAME!=="hrx-offsite" ? "?game="+GAME : ""); }
 
@@ -1125,6 +1139,9 @@ function pipsHtml(t){
 /* ---------- modal ---------- */
 function ask(kind, title, body, confirm, danger, data){ ui.modal = {kind, title, body, confirm, danger, data}; ui.menu = false; scheduleRender(); }
 function modalView(){
+  if (ui.qrBig) return `<div class="overlay qrview" data-act="qr-close"><div class="modal qrmodal" role="dialog" aria-modal="true" aria-label="Join the game">
+    ${QR.svg(joinLinkUrl(), "QR code to join the game")}<p class="joinurl" style="text-align:center">${esc(joinLinkText())}</p>
+    <div class="actions" style="justify-content:center"><button class="btn primary" data-act="qr-close" data-autofocus>Close</button></div></div></div>`;
   const m = ui.modal; if (!m) return "";
   return `<div class="overlay" data-act="modal-cancel"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
     <h2 id="mt">${esc(m.title)}</h2><p class="muted">${esc(m.body)}</p>
@@ -1221,9 +1238,10 @@ function hostJoin(){
   const content = `<div class="split">
     <section class="card stack">
       <p class="eyebrow">On every team phone or tablet</p>
-      <div class="joinbox">${QR.svg(joinLinkUrl(), "QR code for " + esc(joinLinkText()))}
+      <div class="joinbox">${QR.svg(joinLinkUrl(), "QR code to join the game")}
         <div class="stack" style="gap:.5em"><p class="joinurl">${esc(joinLinkText())}</p>
-          <p class="muted">Scan the code or type this address, then tap the team name. Each team lights up below when its device connects.</p></div></div>
+          <p class="muted">Scan the code or type this address, then tap the team name. Each team lights up below when its device connects.</p>
+          <div><button class="btn" data-act="qr-big">Show large QR code</button></div></div></div>
       <div class="slots">${teamIds().map((t,i) => { const x = lt[i]; const on = x.now; return `<div class="slot ${on?"on":""}"><span class="muted small">Paddle ${i+1}</span><b>${esc(teamName(t))}</b><span class="st">${store.mode==="practice" ? "Console bids" : on ? `<span class="dot"></span>Connected` : x.joined ? "Disconnected" : "Waiting…"}</span></div>`; }).join("")}</div>
     </section>
     <details class="settings" ${lockedSet?"":"open"}>
@@ -1713,7 +1731,7 @@ function runModal(){
 $app.addEventListener("click", e => {
   if (ui.menu && !e.target.closest(".menu") && !e.target.closest('[data-act="menu"]')) { ui.menu = false; scheduleRender(); }
   const b = e.target.closest("[data-act]"); if (!b || b.disabled) return;
-  if (b.classList.contains("overlay") && e.target!==b) return; // clicks inside the dialog
+  if (b.classList.contains("overlay") && e.target!==b) return; // clicks inside the dialog (or the large QR) don't close it
   const a = b.dataset.act;
   const team = ui.role && ui.role!=="host" ? ui.role : null;
   const st = S();
@@ -1759,6 +1777,8 @@ $app.addEventListener("click", e => {
     case "bid-for": if (once("bidfor-"+b.dataset.team, 400)) placeBid(b.dataset.team, nextBidAmount()); break;   // per team, so two paddles can be entered back to back
     case "pitch": if (once(a)) hostWrite(s2 => { s2.pitchAt = now(); }); break;
     case "dtab": ui.dtab = b.dataset.tab; break;
+    case "qr-big": ui.qrBig = true; break;
+    case "qr-close": ui.qrBig = false; break;
     case "team-add": if (once(a, 300)) addTeam(); break;   // absorbs an accidental double-click only
     case "team-remove": { const i = Number(b.dataset.i); const id = "t" + (i+1);
       if (connectedTeams()[id]) ask("team-remove", `Remove Team ${teamName(id)}?`, "A device is connected as this team. It will go back to the team list, and teams after it move up one paddle number.", "Remove the team", true, i);
@@ -1807,14 +1827,31 @@ $app.addEventListener("change", e => {
 });
 document.addEventListener("keydown", e => {
   if (e.key!=="Escape") return;
-  if (ui.modal) ui.modal = null; else if (ui.menu) ui.menu = false; else if (ui.drawer) ui.drawer = null; else return;
+  if (ui.qrBig) ui.qrBig = false; else if (ui.modal) ui.modal = null; else if (ui.menu) ui.menu = false; else if (ui.drawer) ui.drawer = null; else return;
   scheduleRender();
 });
 
 /* keep tablets and the projector awake */
 let lock = null;
 async function wake(){ try { if (navigator.wakeLock && !lock) { lock = await navigator.wakeLock.request("screen"); lock.addEventListener("release", () => { lock=null; }); } } catch(e){} }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState==="visible" && ui.role) wake(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState==="visible") { if (ui.role) { wake(); setPresence(); } }
+  else dropPresenceMark();
+});
+window.addEventListener("pagehide", dropPresenceMark);
+window.addEventListener("pageshow", e => { if (e.persisted) setPresence(); });
+// heartbeat while visible; the projector and start screen re-check freshness, and the console clears old marks
+setInterval(() => { if (presRef && store.connected && document.visibilityState==="visible") setPresence(); }, HEARTBEAT_MS);
+setInterval(() => {
+  if (ui.role && ui.role!=="host") return;
+  scheduleRender();
+  if (ui.role==="host" && store.mode==="live" && store.connected && fb) {
+    for (const [role, devs] of Object.entries(store.presence || {})) {
+      if (!devs || typeof devs!=="object") continue;
+      for (const [id, v] of Object.entries(devs)) if (typeof v!=="number" || now() - v > PRESENCE_PRUNE_MS) fb.remove(fb.ref(fdb, BASE + "/presence/" + role + "/" + id)).catch(() => {});
+    }
+  }
+}, 5000);
 
 init();
 })();
